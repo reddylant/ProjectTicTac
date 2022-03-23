@@ -1,16 +1,27 @@
+using System.Collections;
+using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
+    enum State
+    {
+        Grounded,
+        Air,
+        Hanging
+    }
+
     [RequireComponent(typeof (Rigidbody))]
     [RequireComponent(typeof (CapsuleCollider))]
     public class RigidbodyFirstPersonController : MonoBehaviour
     {
+        
         [Serializable]
         public class MovementSettings
         {
+            VaultCheck vaultCheck;
             public float ForwardSpeed = 8.0f;   // Speed when walking forward
             public float BackwardSpeed = 4.0f;  // Speed when walking backwards
             public float StrafeSpeed = 4.0f;    // Speed when walking sideways
@@ -82,14 +93,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public MouseLook mouseLook = new MouseLook();
         public AdvancedSettings advancedSettings = new AdvancedSettings();
 
+
         private Rigidbody m_RigidBody;
-        [SerializeField]
         private CapsuleCollider m_Capsule;
         private float m_YRotation;
         private Vector3 m_GroundContactNormal;
         private bool m_Jump, m_PreviouslyGrounded, m_Jumping, m_IsGrounded;
-
-        
 
 
         public Vector3 Velocity
@@ -123,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void Start()
         {
             m_RigidBody = GetComponent<Rigidbody>();
-            //m_Capsule = GetComponent<CapsuleCollider>();
+            m_Capsule = GetComponent<CapsuleCollider>();
             mouseLook.Init (transform, cam.transform);
         }
 
@@ -134,7 +143,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (CrossPlatformInputManager.GetButtonDown("Jump") && !m_Jump)
             {
-                m_Jump = true;
+                //Checks if player can vault
+                if (Vault() && !StepUp())
+                {
+                    //Vault Action
+                }
+                else if (StepUp() && Vault())
+                {
+                    //StepUp Action
+                }
+                else if (Ledge())
+                {
+                    //Ledge Grab Actions
+                    
+                }
+                else
+                {
+                    m_Jump = true;
+                }
             }
         }
 
@@ -245,15 +271,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         /// sphere cast down just beyond the bottom of the capsule to see if the capsule is colliding round the bottom
         private void GroundCheck()
         {
-            Vector3 playerPos = transform.position;
-            playerPos.y += .1f;
-
             m_PreviouslyGrounded = m_IsGrounded;
             RaycastHit hitInfo;
-            if (Physics.SphereCast(playerPos, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
+            if (Physics.SphereCast(transform.position, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
                                    ((m_Capsule.height/2f) - m_Capsule.radius) + advancedSettings.groundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
             {
-                Debug.Log(hitInfo.collider.name);
                 m_IsGrounded = true;
                 m_GroundContactNormal = hitInfo.normal;
             }
@@ -268,12 +290,122 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void OnDrawGizmos()
+        //Detects whether there's an object tall enough to need to vault on
+        bool Vault()
         {
-            Vector3 playerPos = transform.position;
-            playerPos.y += .1f;
-            Gizmos.DrawSphere(playerPos, m_Capsule.radius * (1.0f - advancedSettings.shellOffset));
+            bool result = false;
+            float vaultDistance = 1;
+            //Checks for vaultable surface
+            RaycastHit hipHit;
+            RaycastHit overheadHit;
+            Vector3 origin = this.transform.position;
+            Vector3 direction = this.transform.forward;
+            //Checks if object is too tall
+            Vector3 originHorizontal = this.transform.position;
+            originHorizontal.y += 1f;
+            Vector3 directionHorizontal = this.transform.forward;
 
+            Debug.DrawRay(origin, direction * vaultDistance, Color.red);
+            Debug.DrawRay(originHorizontal, directionHorizontal * vaultDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hipHit, vaultDistance) &&
+                !Physics.Raycast(originHorizontal, directionHorizontal, out overheadHit, vaultDistance))
+            {
+                //Debug.Log("Vault hit");
+                result = true;
+            }
+            else
+            {
+                //Debug.Log("No Vault Hit");
+            }
+
+            return result;
+        }
+
+        //Detects if the vaultable obejct is actually a small step needed to be climbed
+        bool StepUp()
+        {
+            bool result = false;
+            float stepDistance = 1;
+
+            RaycastHit stepHit;
+            Vector3 origin = transform.position + (transform.forward * .5f);
+            origin.y += 1;
+            Vector3 direction = Vector3.down;
+
+            Debug.DrawRay(origin, direction * stepDistance, Color.blue);
+            if (Physics.Raycast(origin, direction, out stepHit, stepDistance))
+            {
+                Debug.Log("Step Hit");
+                result = true;
+            }
+            else
+            {
+                Debug.Log("No Step Hit");
+            }
+
+            return result;
+        }
+
+        //Detects grabbable ledge
+        bool Ledge()
+        {
+            bool result = false;
+            float mDHorizontal = 1;
+            float mDVertical = 1;
+
+            RaycastHit overheadHit;
+            RaycastHit spaceHit;
+            //Detects surface facing player
+            Vector3 originHorizontal = this.transform.position;
+            originHorizontal.y += 1f;
+            Vector3 directionHorizontal = this.transform.forward;
+            //Detects if the surface has a grabbable spot
+            Vector3 originVertical = transform.position + (transform.forward * .5f);
+            originVertical.y += 2f;
+            Vector3 directionVertical = -this.transform.up;
+
+            Debug.DrawRay(originHorizontal, directionHorizontal * mDHorizontal, Color.red);
+            Debug.DrawRay(originVertical, directionVertical * mDVertical, Color.blue);
+            if (Physics.Raycast(originHorizontal, directionHorizontal, out overheadHit, mDHorizontal))
+            {
+                if (Physics.Raycast(originVertical, directionVertical, out spaceHit, mDVertical))
+                {
+                    Debug.Log("Ledge Hit");
+                    result = true;
+                }
+            }
+            
+            else
+            {
+                Debug.Log("No Ledge Hit");
+            }
+
+            return result;
+        }
+
+        // Checks if can mantle ledge
+        bool Mantle()
+        {
+            bool result = false;
+            float mantleDistance = 1;
+
+            RaycastHit MantleHit;
+            Vector3 origin = transform.position + (transform.forward * 1);
+            origin.y += 1;
+            Vector3 direction = Vector3.down;
+
+            Debug.DrawRay(origin, direction * mantleDistance, Color.blue);
+            if (Physics.Raycast(origin, direction, out MantleHit, mantleDistance))
+            {
+                Debug.Log("Mantle Hit");
+                result = true;
+            }
+            else
+            {
+                Debug.Log("No Mantle Hit");
+            }
+
+            return result;
         }
     }
 }
