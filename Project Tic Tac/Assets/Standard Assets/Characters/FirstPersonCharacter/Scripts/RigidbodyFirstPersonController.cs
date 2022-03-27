@@ -82,12 +82,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public MouseLook mouseLook = new MouseLook();
         public AdvancedSettings advancedSettings = new AdvancedSettings();
 
-
         private Rigidbody m_RigidBody;
+        [SerializeField]
         private CapsuleCollider m_Capsule;
         private float m_YRotation;
         private Vector3 m_GroundContactNormal;
         private bool m_Jump, m_PreviouslyGrounded, m_Jumping, m_IsGrounded;
+
+        
 
 
         public Vector3 Velocity
@@ -121,7 +123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void Start()
         {
             m_RigidBody = GetComponent<Rigidbody>();
-            m_Capsule = GetComponent<CapsuleCollider>();
+            //m_Capsule = GetComponent<CapsuleCollider>();
             mouseLook.Init (transform, cam.transform);
         }
 
@@ -243,11 +245,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         /// sphere cast down just beyond the bottom of the capsule to see if the capsule is colliding round the bottom
         private void GroundCheck()
         {
+            Vector3 playerPos = transform.position;
+            playerPos.y += .1f;
+
             m_PreviouslyGrounded = m_IsGrounded;
             RaycastHit hitInfo;
-            if (Physics.SphereCast(transform.position, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
+            if (Physics.SphereCast(playerPos, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
                                    ((m_Capsule.height/2f) - m_Capsule.radius) + advancedSettings.groundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
             {
+                Debug.Log(hitInfo.collider.name);
                 m_IsGrounded = true;
                 m_GroundContactNormal = hitInfo.normal;
             }
@@ -260,6 +266,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 m_Jumping = false;
             }
+        }
+
+        private void OnDrawGizmos()
+        {
+            Vector3 playerPos = transform.position;
+            playerPos.y += .1f;
+            Gizmos.DrawSphere(playerPos, m_Capsule.radius * (1.0f - advancedSettings.shellOffset));
+
         }
     }
 }
