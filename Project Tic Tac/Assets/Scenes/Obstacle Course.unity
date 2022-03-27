@@ -4135,8 +4135,27 @@ PrefabInstance:
       propertyPath: m_Name
       value: FPEthan
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 366256941945966690, guid: dcd71691449b04f41b58d07dc8b7c09a, type: 3}
+    - {fileID: 366256941945966691, guid: dcd71691449b04f41b58d07dc8b7c09a, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: dcd71691449b04f41b58d07dc8b7c09a, type: 3}
+--- !u!1 &366256942905233033 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 366256941917151106, guid: dcd71691449b04f41b58d07dc8b7c09a, type: 3}
+  m_PrefabInstance: {fileID: 366256942905233032}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &366256942905233034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366256942905233033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44c33fb19eaaa4143a73d0bbd336099e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &947012210278272272
 PrefabInstance:
   m_ObjectHideFlags: 0
