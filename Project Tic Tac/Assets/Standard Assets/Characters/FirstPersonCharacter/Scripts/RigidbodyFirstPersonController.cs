@@ -14,7 +14,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     }
 
     [RequireComponent(typeof (Rigidbody))]
-    [RequireComponent(typeof (CapsuleCollider))]
+    
     public class RigidbodyFirstPersonController : MonoBehaviour
     {
         ParkourDetection PD;
@@ -98,6 +98,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         private Rigidbody m_RigidBody;
+        [SerializeField]
         private CapsuleCollider m_Capsule;
         private float m_YRotation;
         private Vector3 m_GroundContactNormal;
@@ -135,7 +136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void Start()
         {
             m_RigidBody = GetComponent<Rigidbody>();
-            m_Capsule = GetComponent<CapsuleCollider>();
+            //m_Capsule = GetComponent<CapsuleCollider>();
             mouseLook.Init (transform, cam.transform);
             PD = gameObject.GetComponent<ParkourDetection>();
         }
@@ -144,7 +145,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void Update()
         {
             RotateView();
-            PD.FindLedge();
+            PD.WallCheckLeft();
+            PD.LedgeCornerRight();
+            
+            //PD.LedgeLeft();
             //PD.Mantle();
             //PD.Vault();
             //PD.StepUp();

@@ -9,6 +9,14 @@ public class ParkourDetection : MonoBehaviour
 
     float minDistance = .25f;
 
+    [SerializeField]
+    Transform hands;
+
+    private void Start()
+    {
+        hands = GameObject.FindGameObjectWithTag("Player").transform.Find("Hands");
+    }
+
     //Checks for vaultable surface
     public bool Vault()
     {
@@ -160,9 +168,486 @@ public class ParkourDetection : MonoBehaviour
         return false;
     }
 
-    public bool NextLedge()
+    public bool WallCheckLeft()
     {
+        float wallDistance = .35f;
 
+        Vector3 origin = hands.position;
+        Vector3 direction = -transform.right;
+        Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else
+        {
+            Debug.DrawRay(origin - (hands.forward * .3f) + (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("No Wall");
+            return false;
+        }
+    }
+
+    public bool WallCheckRight()
+    {
+        float wallDistance = .35f;
+
+        Vector3 origin = hands.position;
+        Vector3 direction = transform.right;
+        Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        {
+            Debug.Log("Wall Detected");
+
+            return true;
+        }
+        else
+        {
+            Debug.DrawRay(origin - (hands.forward * .3f) + (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.DrawRay(origin - (hands.forward * .2f) + (hands.up * .05f), direction * wallDistance, Color.cyan);
+            Debug.Log("No Wall");
+            return false;
+        }
+    }
+
+    //Checks if there's a grabbable ledge above the player
+    public bool LedgeUp()
+    {
+        float ledgeDistance = .5f;
+
+        //Checks for upward facing surface
+        Vector3 origin = hands.position + (transform.forward * .05f);
+        origin.y += .8f;
+        Vector3 direction = Vector3.down;
+
+        Debug.DrawRay(origin + transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
+        if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+        {
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            direction = transform.forward;
+            Debug.DrawRay(origin + transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+            {
+
+                Debug.Log("Ledge Up Hit");
+                return true;
+            }
+            else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+            {
+                Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
+                origin = hands.position - (transform.forward * .05f);
+                origin.y = hitVert.point.y;
+                origin.y -= .01f;
+                direction = transform.forward;
+                Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
+                if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+                {
+
+                    Debug.Log("Ledge Up Hit");
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            direction = transform.forward;
+            Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+            {
+
+                Debug.Log("Ledge Up Hit");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
+
+            Debug.Log("No Above Ledge");
+        }
+
+        return false;
+    }
+
+    public bool LedgeLeft()
+    {
+        float ledgeDistance = .5f;
+
+        // Max distance the player can move in one animation
+        Vector3 origin = hands.position + (transform.forward * .05f);
+        origin.y += .2f;
+        Vector3 direction = Vector3.down;
+
+        Debug.DrawRay(origin - (transform.right * .5f), direction * ledgeDistance, Color.blue);
+        if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitVert, ledgeDistance))
+        {
+            // Shoots horizontal Ray to get X and Z coordinates
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            direction = transform.forward;
+
+            Debug.DrawRay(origin - (transform.right * .5f), direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitHor, ledgeDistance))
+            {
+
+                Debug.Log("Ledge Left Hit");
+                return true;
+            }
+            else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance))
+            {
+                Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.blue);
+                origin = hands.position - (transform.forward * .05f);
+                origin.y = hitVert.point.y;
+                origin.y -= .01f;
+                direction = transform.forward;
+                Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.red);
+                if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance))
+                {
+                    Debug.Log("Ledge Left Hit");
+                    return true;
+                }
+                else
+                {
+                    Debug.Log("No Left Hit");
+                    return false;
+                }
+
+            }
+            else
+            {
+                Debug.Log("No Left Hit");
+                return false;
+            }
+
+        }
+        else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.blue);
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            direction = transform.forward;
+            Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Ledge Left Hit");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        else
+        {
+            Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.blue);
+            Debug.Log("No Left Hit");
+
+            return false;
+        }
+        
+    }
+
+    public bool LedgeRight()
+    {
+        float ledgeDistance = .5f;
+
+        // Max distance the player can move in one animation
+        Vector3 origin = hands.position + (transform.forward * .05f);
+        origin.y += .2f;
+        Vector3 direction = Vector3.down;
+
+        Debug.DrawRay(origin + (transform.right * .5f), direction * ledgeDistance, Color.blue);
+        if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitVert, ledgeDistance))
+        {
+            // Shoots horizontal Ray to get X and Z coordinates
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            
+            direction = transform.forward;
+            Debug.DrawRay(origin + (transform.right * .5f), direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitHor, ledgeDistance))
+            {
+
+                Debug.Log("Ledge Left Hit");
+                return true;
+            }
+            else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance))
+            {
+                Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.blue);
+                origin = hands.position - (transform.forward * .05f);
+                origin.y = hitVert.point.y;
+                origin.y -= .01f;
+                direction = transform.forward;
+                Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.red);
+                if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance))
+                {
+                    Debug.Log("Ledge Left Hit");
+                    return true;
+                }
+                else
+                {
+                    Debug.Log("No Left Hit");
+                    return false;
+                }
+
+            }
+            else
+            {
+                Debug.Log("No Left Hit");
+                return false;
+            }
+
+        }
+        else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.blue);
+            origin = hands.position - (transform.forward * .05f);
+            origin.y = hitVert.point.y;
+            origin.y -= .01f;
+            direction = transform.forward;
+            Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Ledge Left Hit");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        else
+        {
+            Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.blue);
+            Debug.Log("No Left Hit");
+
+            return false;
+        }
+
+    }
+
+    public bool LedgeCornerRight()
+    {
+        float ledgeDistance = .5f;
+
+        Vector3 origin = hands.position;
+        origin.y += .2f;
+        Vector3 direction = Vector3.down;
+
+        Debug.DrawRay(origin - (transform.forward * .2f) + (transform.right * .4f), direction * ledgeDistance, Color.blue);
+        if (Physics.Raycast(origin - (transform.forward * .2f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        {
+            origin = hands.position - (transform.forward * .2f);
+            origin.y = hitVert.point.y - .01f;
+            direction = transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin - (transform.forward * .3f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        {
+            Debug.DrawRay(origin - (transform.forward * .3f) + (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            origin = hands.position - (transform.forward * .3f);
+            origin.y = hitVert.point.y - .01f;
+            direction = transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin + (transform.forward * .25f) + (transform.right * .1f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin + (transform.forward * .25f) + (transform.right * .1f), direction * ledgeDistance, Color.blue);
+            origin = hands.position + (transform.forward * .25f) + (transform.right * .5f);
+            origin.y = hitVert.point.y - .01f;
+            direction = -transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            {
+                Debug.Log("Forward Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
+            origin = hands.position + (transform.forward * .25f) + (transform.right * .5f);
+            origin.y = hitVert.point.y - .01f;
+            direction = -transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            {
+                Debug.Log("Forward Corner Found");
+
+                return true;
+            }
+        }
+        else
+        {
+            Debug.DrawRay(origin - (transform.forward * .3f) + (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f) + (transform.right * .1f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
+            
+            return false;
+        }
+
+        return false;
+    }
+    public bool LedgeCornerLeft()
+    {
+        float ledgeDistance = .5f;
+
+        Vector3 origin = hands.position;
+        origin.y += .2f;
+        Vector3 direction = Vector3.down;
+
+        Debug.DrawRay(origin - (transform.forward * .2f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
+        if (Physics.Raycast(origin - (transform.forward * .2f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        {
+            origin = hands.position - (transform.forward * .2f);
+            origin.y = hitVert.point.y - .01f;
+            direction = -transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin - (transform.forward * .3f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        {
+            Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            origin = hands.position - (transform.forward * .3f);
+            origin.y = hitVert.point.y - .01f;
+            direction = -transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            {
+                Debug.Log("Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin + (transform.forward * .25f) - (transform.right * .1f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f) - (transform.right * .1f), direction * ledgeDistance, Color.blue);
+            origin = hands.position + (transform.forward * .25f) - (transform.right * .5f);
+            origin.y = hitVert.point.y - .01f;
+            direction = transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            {
+                Debug.Log("Forward Corner Found");
+
+                return true;
+            }
+        }
+        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance))
+        {
+            Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f) - (transform.right * .1f), direction * ledgeDistance, Color.blue);
+            origin = hands.position + (transform.forward * .25f) - (transform.right * .5f);
+            origin.y = hitVert.point.y - .01f;
+            direction = transform.right;
+
+            Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            {
+                Debug.Log("Forward Corner Found");
+
+                return true;
+            }
+        }
+        else
+        {
+            Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f) - (transform.right * .1f), direction * ledgeDistance, Color.blue);
+            Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
+
+            return false;
+        }
 
         return false;
     }
