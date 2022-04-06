@@ -103,7 +103,7 @@ public class PlayerController : MonoBehaviour
             rigidbody.drag = 0f;
             rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
             rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f), ForceMode.Impulse);
-            curJumpForce = curJumpForce / 2;
+            curJumpForce = curJumpForce / 4;
             if (curJumpForce < 0)
             {
                 curJumpForce = 0;

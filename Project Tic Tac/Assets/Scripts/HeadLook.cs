@@ -61,13 +61,13 @@ public class HeadLook : MonoBehaviour
 
         playerHead.localRotation = Quaternion.Euler(xRotation, (yRotation * -1), 0);
 
-        if (walkingPressed && isGrounded)
+        if (walkingPressed)
         {
             playerBody.Rotate(Vector3.up * mouseX);
             playerHead.localRotation = Quaternion.Euler(xRotation, 0, 0);
         }
 
-        if ((Mathf.Abs(yRotation) == maxHorizontal) && isGrounded)
+        if ((Mathf.Abs(yRotation) == maxHorizontal))
         {
             playerBody.Rotate(Vector3.up * mouseX);
         }
