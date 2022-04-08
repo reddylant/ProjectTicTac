@@ -3,12 +3,24 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    /*  This enum will tell us when the player is on the ground jumping or falling in the air,
+        or hanging on a ledge they grabbed. This is how we will determine what animations are
+        played, what rays are casted, and any other behaviour   */
+    enum MoveState
+    {
+        Ground,
+        Air,
+        Ledge
+    }
+
     //Serialized Fields
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private float groundedDist = 0.01f;
     [SerializeField] private float jumpForce;
+    [SerializeField] private float climbSpeed;
     [SerializeField] private Transform rightFoot;
     [SerializeField] private Transform leftFoot;
+    [SerializeField] private MoveState moveState;
 
 
     // Storage of the animator
@@ -21,6 +33,9 @@ public class PlayerController : MonoBehaviour
     int isWalkingHash;
     int isRunningHash;
     int isJumpingHash;
+    int isBracedHash;
+    int isHangingHash;
+    int isGroundedHash;
 
     // Reading player input
     PlayerInput input;
@@ -32,6 +47,15 @@ public class PlayerController : MonoBehaviour
 
     // iteration values
     float curJumpForce;
+
+    // Location of a hit point
+    Vector3 nextPoint;
+    Vector3 nextNormal;
+
+    // Private variables
+    bool isGrounded;
+    ParkourDetection PD;
+    Transform hands;
 
     private void Awake()
     {
@@ -52,19 +76,49 @@ public class PlayerController : MonoBehaviour
         // Initialize RigidBody
         rigidbody = GetComponent<Rigidbody>();
 
+        // Initialize Parkour Detection
+        PD = GetComponent<ParkourDetection>();
+
         // Get IDs for triggers
         isWalkingHash = Animator.StringToHash("isWalking");
         isJumpingHash = Animator.StringToHash("isJumping");
         isRunningHash = Animator.StringToHash("isRunning");
+        isBracedHash = Animator.StringToHash("isBraced");
+        isHangingHash = Animator.StringToHash("isHanging");
+        isGroundedHash = Animator.StringToHash("isGrounded");
 
         // set iter values
         curJumpForce = jumpForce;
+
+        hands = gameObject.transform.Find("Hands").transform;
     }
 
     // Update is called once per frame
     void Update()
     {
         handleMovement();
+        isGrounded = GroundedCheck();
+
+    }
+
+    private void FixedUpdate()
+    {
+        switch (moveState)
+        {
+            case MoveState.Ground:
+                animator.applyRootMotion = true;
+                rigidbody.isKinematic = false;
+                break;
+            case MoveState.Air:
+                rigidbody.isKinematic = false;
+                break;
+            case MoveState.Ledge:
+                rigidbody.isKinematic = true;
+                animator.applyRootMotion = false;
+                break;
+            default:
+                break;
+        }
     }
 
     void handleMovement()
@@ -73,49 +127,109 @@ public class PlayerController : MonoBehaviour
         bool isJumping = animator.GetBool(isJumpingHash);
         bool isRunning = animator.GetBool(isRunningHash);
 
-        bool isGrounded = GroundedCheck();
+        
+        //animator.SetBool(isHangingHash, true);
 
-        // Start and stop root motion of walking
-        if (walkingPressed && !isWalking && isGrounded)
+        animator.SetBool(isGroundedHash, isGrounded);
+        
+        if (isGrounded && moveState != MoveState.Ledge)
         {
-            animator.SetBool(isWalkingHash, true);
+            moveState = MoveState.Ground;
+        }
+        else if (!isGrounded && moveState != MoveState.Ledge)
+        {
+            moveState = MoveState.Air;
+            animator.applyRootMotion = false;
         }
 
+
+        if (moveState == MoveState.Ground)
+        {
+            // Start root motion of walking
+            if (walkingPressed && !isWalking && isGrounded)
+            {
+                animator.SetBool(isWalkingHash, true);
+            }
+
+            // Start root motion of running
+            if ((walkingPressed && sprintPressed) && !isRunning && isGrounded)
+            {
+                animator.SetBool(isRunningHash, true);
+            }
+        }
+        // Stop root motion of walking
         if ((!walkingPressed && isWalking) || !isGrounded)
         {
             animator.SetBool(isWalkingHash, false);
         }
-
-        // Start and stop root motion of running
-        if ((walkingPressed && sprintPressed) && !isRunning && isGrounded)
-        {
-            animator.SetBool(isRunningHash, true);
-        }
-
+        // Stop root motion of running
         if (((!walkingPressed || !sprintPressed) && isRunning) || !isGrounded)
         {
             animator.SetBool(isRunningHash, false);
         }
 
-        if (jumpingPressed && !isJumping && isGrounded)
+        // Start and stop jumping
+        if (jumpingPressed && !isJumping && isGrounded && moveState == MoveState.Ground)
         {
-            animator.SetBool(isJumpingHash, true);
-            rigidbody.drag = 0f;
-            rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
-            rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f), ForceMode.Impulse);
-            curJumpForce = curJumpForce / 4;
-            if (curJumpForce < 0)
+            if (PD.FindLedge())
             {
-                curJumpForce = 0;
+                moveState = MoveState.Ledge;
+                nextPoint = new Vector3(PD.hitHor.point.x, PD.hitVert.point.y, PD.hitHor.point.z);
+                nextNormal = -PD.hitHor.normal;
+                animator.SetBool(isBracedHash, true);
+
+                // Gets direction player needs to face
+                Quaternion lookRotaion = Quaternion.LookRotation(nextNormal);
+
+                // Move player to new position
+                transform.position = Vector3.Lerp(transform.position, (nextPoint - transform.rotation * hands.localPosition), Time.deltaTime * climbSpeed);
+
+                // Rotate player
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotaion, Time.deltaTime * climbSpeed);
+
             }
+            else
+            {
+                animator.SetBool(isJumpingHash, true);
+                rigidbody.drag = 0f;
+                rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
+                rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f), ForceMode.Impulse);
+                curJumpForce = curJumpForce / 4;
+                if (curJumpForce < 0)
+                {
+                    curJumpForce = 0;
+                }
+                moveState = MoveState.Air;
+            }
+            
         }
         else if (jumpingPressed && !isGrounded)
         {
-            rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f));
-            curJumpForce = curJumpForce / 2;
-            if (curJumpForce < 0)
+            if (PD.FindLedge())
             {
-                curJumpForce = 0;
+                moveState = MoveState.Ledge;
+                nextPoint = new Vector3(PD.hitHor.point.x, PD.hitVert.point.y, PD.hitHor.point.z);
+                nextNormal = -PD.hitHor.normal;
+                animator.SetBool(isBracedHash, true);
+
+                // Gets direction player needs to face
+                Quaternion lookRotaion = Quaternion.LookRotation(nextNormal);
+
+                // Move player to new position
+                transform.position = Vector3.Lerp(transform.position, (nextPoint - transform.rotation * hands.localPosition), Time.deltaTime * climbSpeed);
+
+                // Rotate player
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotaion, Time.deltaTime * climbSpeed);
+
+            }
+            else
+            {
+                rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f));
+                curJumpForce = curJumpForce / 2;
+                if (curJumpForce < 0)
+                {
+                    curJumpForce = 0;
+                }
             }
         }
 
@@ -124,6 +238,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isJumpingHash, false);
             curJumpForce = jumpForce;
         }
+
     }
 
     public bool GroundedCheck()
