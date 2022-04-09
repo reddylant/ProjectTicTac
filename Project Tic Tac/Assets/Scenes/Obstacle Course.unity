@@ -3103,7 +3103,7 @@ MonoBehaviour:
   cursorLocked: 1
   maxVertical: 90
   maxHorizontal: 90
-  mouseSensitivity: 60
+  mouseSensitivity: 20
   playerBody: {fileID: 1787881390}
   playerHead: {fileID: 1042390159}
   controller: {fileID: 1787881389}

@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour
     int isWalkingHash;
     int isRunningHash;
     int isJumpingHash;
+    int YVelocityHash;
+    int XVelocityHash;
+    int ZVelocityHash;
 
     // Reading player input
     PlayerInput input;
@@ -56,6 +59,9 @@ public class PlayerController : MonoBehaviour
         isWalkingHash = Animator.StringToHash("isWalking");
         isJumpingHash = Animator.StringToHash("isJumping");
         isRunningHash = Animator.StringToHash("isRunning");
+        YVelocityHash = Animator.StringToHash("YVelocity");
+        XVelocityHash = Animator.StringToHash("XVelocity");
+        ZVelocityHash = Animator.StringToHash("ZVelocity");
 
         // set iter values
         curJumpForce = jumpForce;
@@ -67,6 +73,11 @@ public class PlayerController : MonoBehaviour
         handleMovement();
     }
 
+    private void FixedUpdate()
+    {
+        animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+    }
+
     void handleMovement()
     {
         bool isWalking = animator.GetBool(isWalkingHash);
@@ -75,30 +86,31 @@ public class PlayerController : MonoBehaviour
 
         bool isGrounded = GroundedCheck();
 
-        // Start and stop root motion of walking
-        if (walkingPressed && !isWalking && isGrounded)
+        // Start and stop root motion of walking and running
+        if (walkingPressed && !sprintPressed && isGrounded)
         {
-            animator.SetBool(isWalkingHash, true);
+            animator.SetFloat(ZVelocityHash, 1);
         }
-
-        if ((!walkingPressed && isWalking) || !isGrounded)
+        else if ((walkingPressed && sprintPressed) && isGrounded)
         {
-            animator.SetBool(isWalkingHash, false);
+            animator.SetFloat(ZVelocityHash, 2);
         }
-
-        // Start and stop root motion of running
-        if ((walkingPressed && sprintPressed) && !isRunning && isGrounded)
+        else if ((!walkingPressed || !sprintPressed) || (!isGrounded && !isJumping))
         {
-            animator.SetBool(isRunningHash, true);
-        }
-
-        if (((!walkingPressed || !sprintPressed) && isRunning) || !isGrounded)
-        {
-            animator.SetBool(isRunningHash, false);
+            animator.SetFloat(ZVelocityHash, 0);
         }
 
         if (jumpingPressed && !isJumping && isGrounded)
         {
+            if (walkingPressed && !sprintPressed && isGrounded)
+            {
+                animator.SetFloat(ZVelocityHash, 1);
+            }
+            else if ((walkingPressed && sprintPressed) && isGrounded)
+            {
+                animator.SetFloat(ZVelocityHash, 2);
+            }
+
             animator.SetBool(isJumpingHash, true);
             rigidbody.drag = 0f;
             rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
@@ -111,6 +123,15 @@ public class PlayerController : MonoBehaviour
         }
         else if (jumpingPressed && !isGrounded)
         {
+            if (walkingPressed && !sprintPressed)
+            {
+                animator.SetFloat(ZVelocityHash, 1);
+            }
+            else if (walkingPressed && sprintPressed)
+            {
+                animator.SetFloat(ZVelocityHash, 2);
+            }
+
             rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f));
             curJumpForce = curJumpForce / 2;
             if (curJumpForce < 0)
