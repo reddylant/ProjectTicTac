@@ -9,7 +9,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce;
     [SerializeField] private Transform rightFoot;
     [SerializeField] private Transform leftFoot;
-
+    [SerializeField] float firstJump;
+    [SerializeField] float maxJumpHeight = 3;
+    [SerializeField] float maxJumpTime = .5f;
+    [SerializeField] float jumpTime = .35f;
 
     // Storage of the animator
     Animator animator;
@@ -18,8 +21,6 @@ public class PlayerController : MonoBehaviour
     Rigidbody rigidbody;
 
     // IDs for the action bools
-    int isWalkingHash;
-    int isRunningHash;
     int isJumpingHash;
     int isGroundedHash;
     int YVelocityHash;
@@ -29,31 +30,15 @@ public class PlayerController : MonoBehaviour
     // Reading player input
     PlayerInput input;
 
-    // Storing player input
-    bool walkingPressed;
-    bool sprintPressed;
-    bool jumpingPressed;
-
-    // iteration values
-    float curJumpForce;
-
     bool grounded;
     Vector2 move;
     float sprint;
 
-    // Dylan's Jump Variables
+    // Jump Variables
     bool isJumpPressed;
     bool jumpHeld;
     bool isJumping;
     float initialJumpVelocity;
-    [SerializeField]
-    float firstJump;
-    [SerializeField]
-    float maxJumpHeight = 3;
-    [SerializeField]
-    float maxJumpTime = .5f;
-    [SerializeField]
-    float jumpTime = .35f;
     float jumpTimeCounter;
 
     private void Awake()
@@ -83,16 +68,12 @@ public class PlayerController : MonoBehaviour
         rigidbody = GetComponent<Rigidbody>();
 
         // Get IDs for triggers
-        isWalkingHash = Animator.StringToHash("isWalking");
         isJumpingHash = Animator.StringToHash("isJumping");
-        isRunningHash = Animator.StringToHash("isRunning");
         isGroundedHash = Animator.StringToHash("isGrounded");
         YVelocityHash = Animator.StringToHash("YVelocity");
         XVelocityHash = Animator.StringToHash("XVelocity");
         ZVelocityHash = Animator.StringToHash("ZVelocity");
 
-        // set iter values
-        curJumpForce = jumpForce;
     }
 
     // Update is called once per frame
@@ -185,22 +166,28 @@ public class PlayerController : MonoBehaviour
 
     public bool GroundedCheck()
     {
-        
-        bool rayHit = Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2), Vector3.down, maxDistance: groundedDist, playerLayer);
-
-        Color rayColor;
-
-        if (rayHit)
+        Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
+        if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            rayColor = Color.green;
+            return true;
+        }
+        else if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        {
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
+            return true;
+        }
+        else if (Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        {
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            return true;
         }
         else
         {
-            rayColor = Color.red;
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            return false;
         }
-        Debug.DrawRay(animator.rootPosition + transform.up * groundedDist, Vector3.down * groundedDist, rayColor);
-
-        return rayHit;
     }
 
     private void OnEnable()
