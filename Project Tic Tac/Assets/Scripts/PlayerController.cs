@@ -186,22 +186,28 @@ public class PlayerController : MonoBehaviour
 
     public bool GroundedCheck()
     {
-        
-        bool rayHit = Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2), Vector3.down, maxDistance: groundedDist, playerLayer);
-
-        Color rayColor;
-
-        if (rayHit)
+        Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
+        if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            rayColor = Color.green;
+            return true;
+        }
+        else if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        {
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
+            return true;
+        }
+        else if (Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        {
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            return true;
         }
         else
         {
-            rayColor = Color.red;
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            return false;
         }
-        Debug.DrawRay(animator.rootPosition + transform.up * groundedDist, Vector3.down * groundedDist, rayColor);
-
-        return rayHit;
     }
 
     private void OnEnable()

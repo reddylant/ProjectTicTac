@@ -2479,11 +2479,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe59f6426e8df6c4a90d2369d37f0bd8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.11
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe59f6426e8df6c4a90d2369d37f0bd8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.345
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: fe59f6426e8df6c4a90d2369d37f0bd8, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3085,7 +3085,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1117544614}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.028174467, y: 3.7449641, z: 0.080342084}
+  m_LocalPosition: {x: 0.028174467, y: 1.8349643, z: -0.2646579}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1491817946}
@@ -3110,7 +3110,6 @@ MonoBehaviour:
   mouseSensitivity: 20
   playerBody: {fileID: 1787881390}
   playerHead: {fileID: 1042390159}
-  controller: {fileID: 1787881389}
 --- !u!1 &1126643209
 GameObject:
   m_ObjectHideFlags: 0
@@ -4338,7 +4337,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1701035403}
   m_LocalRotation: {x: 0.035697617, y: 0.053317573, z: -0.013564079, w: 0.99784714}
-  m_LocalPosition: {x: 0.028174467, y: 3.7449641, z: 0.080342084}
+  m_LocalPosition: {x: 0.028174467, y: 1.8349643, z: -0.2646579}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -4402,7 +4401,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 1787881388}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.3
   m_Height: 1.65
   m_Direction: 1
