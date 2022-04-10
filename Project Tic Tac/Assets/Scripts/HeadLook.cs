@@ -20,7 +20,6 @@ public class HeadLook : MonoBehaviour
     public float mouseSensitivity = 100f;
     public Transform playerBody;
     public Transform playerHead;
-    public PlayerController controller;
 
     private void Awake()
     {
@@ -45,7 +44,6 @@ public class HeadLook : MonoBehaviour
 
     private void Update()
     {
-        isGrounded = controller.GroundedCheck();
         LookRotation();
     }
 

@@ -99,81 +99,11 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         UpdateMovement();
-        //handleMovement();
     }
 
     private void FixedUpdate()
     {
         animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
-    }
-
-    void handleMovement()
-    {
-        bool isWalking = animator.GetBool(isWalkingHash);
-        bool isJumping = animator.GetBool(isJumpingHash);
-        bool isRunning = animator.GetBool(isRunningHash);
-
-        bool isGrounded = GroundedCheck();
-
-        // Start and stop root motion of walking and running
-        if (walkingPressed && !sprintPressed && isGrounded)
-        {
-            animator.SetFloat(ZVelocityHash, 1);
-        }
-        else if ((walkingPressed && sprintPressed) && isGrounded)
-        {
-            animator.SetFloat(ZVelocityHash, 2);
-        }
-        else if ((!walkingPressed || !sprintPressed) || (!isGrounded && !isJumping))
-        {
-            animator.SetFloat(ZVelocityHash, 0);
-        }
-
-        if (jumpingPressed && !isJumping && isGrounded)
-        {
-            if (walkingPressed && !sprintPressed && isGrounded)
-            {
-                animator.SetFloat(ZVelocityHash, 1);
-            }
-            else if ((walkingPressed && sprintPressed) && isGrounded)
-            {
-                animator.SetFloat(ZVelocityHash, 2);
-            }
-
-            animator.SetBool(isJumpingHash, true);
-            rigidbody.drag = 0f;
-            rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
-            rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f), ForceMode.Impulse);
-            curJumpForce = curJumpForce / 4;
-            if (curJumpForce < 0)
-            {
-                curJumpForce = 0;
-            }
-        }
-        else if (jumpingPressed && !isGrounded)
-        {
-            if (walkingPressed && !sprintPressed)
-            {
-                animator.SetFloat(ZVelocityHash, 1);
-            }
-            else if (walkingPressed && sprintPressed)
-            {
-                animator.SetFloat(ZVelocityHash, 2);
-            }
-
-            rigidbody.AddForce(new Vector3(0f, curJumpForce, 0f));
-            curJumpForce = curJumpForce / 2;
-            if (curJumpForce < 0)
-            {
-                curJumpForce = 0;
-            }
-        }
-
-        if ((!jumpingPressed || isGrounded) && isJumping)
-        {
-            animator.SetBool(isJumpingHash, false);
-            curJumpForce = jumpForce;
-        }
     }
 
     void UpdateMovement()
