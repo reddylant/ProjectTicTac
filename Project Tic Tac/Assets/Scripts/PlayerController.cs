@@ -110,7 +110,6 @@ public class PlayerController : MonoBehaviour
     {
         move = input.CharacterControls.Movement.ReadValue<Vector2>();
         sprint = input.CharacterControls.Sprint.ReadValue<float>();
-        //jump = input.CharacterControls.Jump.ReadValue<float>();
 
         grounded = GroundedCheck();
 
@@ -130,7 +129,7 @@ public class PlayerController : MonoBehaviour
             animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
         }
 
-        if(move.y >= 1 && sprint == 1)
+        if(move.y >= 0.8 && sprint == 1)
         {
             animator.SetFloat(ZVelocityHash, 2);
             Debug.Log("Sprinting");

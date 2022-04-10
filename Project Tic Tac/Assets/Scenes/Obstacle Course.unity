@@ -3107,10 +3107,9 @@ MonoBehaviour:
   cursorLocked: 1
   maxVertical: 90
   maxHorizontal: 90
-  mouseSensitivity: 20
+  mouseSensitivity: 100
   playerBody: {fileID: 1787881390}
   playerHead: {fileID: 1042390159}
-  controller: {fileID: 1787881389}
 --- !u!1 &1126643209
 GameObject:
   m_ObjectHideFlags: 0
@@ -4368,7 +4367,7 @@ MonoBehaviour:
   jumpForce: 4
   rightFoot: {fileID: 968021388}
   leftFoot: {fileID: 439333924}
-  firstJump: 3
+  firstJump: 5
   maxJumpHeight: 0.001
   maxJumpTime: 0.075
   jumpTime: 0.5
