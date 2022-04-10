@@ -47,11 +47,6 @@ public class PlayerController : MonoBehaviour
 
         input.CharacterControls.Enable();
 
-        // Subscribe events for character
-        //input.CharacterControls.Movement.performed += ctx => walkingPressed = ctx.ReadValueAsButton();
-        //input.CharacterControls.Jump.performed += ctx => jumpingPressed = ctx.ReadValueAsButton();
-        //input.CharacterControls.Sprint.performed += ctx => sprintPressed = ctx.ReadValueAsButton();
-
         input.CharacterControls.Jump.started += OnJump;
         input.CharacterControls.Jump.canceled += OnJump;
 
