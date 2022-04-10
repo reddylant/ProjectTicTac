@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour
     int isWalkingHash;
     int isRunningHash;
     int isJumpingHash;
+    int isGroundedHash;
     int YVelocityHash;
     int XVelocityHash;
     int ZVelocityHash;
@@ -36,14 +37,40 @@ public class PlayerController : MonoBehaviour
     // iteration values
     float curJumpForce;
 
+    bool grounded;
+    Vector2 move;
+    float sprint;
+
+    // Dylan's Jump Variables
+    bool isJumpPressed;
+    bool jumpHeld;
+    bool isJumping;
+    float initialJumpVelocity;
+    [SerializeField]
+    float firstJump;
+    [SerializeField]
+    float maxJumpHeight = 3;
+    [SerializeField]
+    float maxJumpTime = .5f;
+    [SerializeField]
+    float jumpTime = .35f;
+    float jumpTimeCounter;
+
     private void Awake()
     {
         input = new PlayerInput();
 
+        input.CharacterControls.Enable();
+
         // Subscribe events for character
-        input.CharacterControls.Movement.performed += ctx => walkingPressed = ctx.ReadValueAsButton();
-        input.CharacterControls.Jump.performed += ctx => jumpingPressed = ctx.ReadValueAsButton();
-        input.CharacterControls.Sprint.performed += ctx => sprintPressed = ctx.ReadValueAsButton();
+        //input.CharacterControls.Movement.performed += ctx => walkingPressed = ctx.ReadValueAsButton();
+        //input.CharacterControls.Jump.performed += ctx => jumpingPressed = ctx.ReadValueAsButton();
+        //input.CharacterControls.Sprint.performed += ctx => sprintPressed = ctx.ReadValueAsButton();
+
+        input.CharacterControls.Jump.started += OnJump;
+        input.CharacterControls.Jump.canceled += OnJump;
+
+        setJumpVariables();
     }
 
     // Start is called before the first frame update
@@ -59,6 +86,7 @@ public class PlayerController : MonoBehaviour
         isWalkingHash = Animator.StringToHash("isWalking");
         isJumpingHash = Animator.StringToHash("isJumping");
         isRunningHash = Animator.StringToHash("isRunning");
+        isGroundedHash = Animator.StringToHash("isGrounded");
         YVelocityHash = Animator.StringToHash("YVelocity");
         XVelocityHash = Animator.StringToHash("XVelocity");
         ZVelocityHash = Animator.StringToHash("ZVelocity");
@@ -70,7 +98,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        handleMovement();
+        UpdateMovement();
+        //handleMovement();
     }
 
     private void FixedUpdate()
@@ -145,6 +174,84 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isJumpingHash, false);
             curJumpForce = jumpForce;
         }
+    }
+
+    void UpdateMovement()
+    {
+        move = input.CharacterControls.Movement.ReadValue<Vector2>();
+        sprint = input.CharacterControls.Sprint.ReadValue<float>();
+        //jump = input.CharacterControls.Jump.ReadValue<float>();
+
+        grounded = GroundedCheck();
+
+        if (grounded)
+        {
+            animator.SetFloat(ZVelocityHash, move.y);
+            animator.SetFloat(XVelocityHash, move.x);
+            animator.SetBool(isJumpingHash, false);
+            animator.SetBool(isGroundedHash, true);
+            animator.applyRootMotion = true;
+        }
+        else
+        {
+            animator.SetBool(isGroundedHash, false);
+            animator.applyRootMotion = false;
+            animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
+            animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
+        }
+
+        if(move.y >= 1 && sprint == 1)
+        {
+            animator.SetFloat(ZVelocityHash, 2);
+            Debug.Log("Sprinting");
+        }
+        JumpCheck();
+    }
+
+    void JumpCheck()
+    {
+        if(!isJumping && grounded && isJumpPressed)
+        {
+            animator.SetBool(isJumpingHash, true);
+            animator.applyRootMotion = false;
+            isJumping = true;
+            jumpTimeCounter = jumpTime;
+            rigidbody.AddForce(new Vector3(0, firstJump, 0), ForceMode.VelocityChange);
+            jumpHeld = true;
+        }
+        else if(!isJumpPressed && isJumping && grounded)
+        {
+            animator.applyRootMotion = true;
+            isJumping = false;
+        }
+        else if (!isJumpPressed && isJumping && !grounded)
+        {
+            jumpHeld = false;
+        }
+
+        if(isJumpPressed && isJumping && jumpHeld)
+        {
+            if(jumpTimeCounter > 0)
+            {
+                rigidbody.AddForce(new Vector3(0, initialJumpVelocity, 0), ForceMode.VelocityChange);
+                jumpTimeCounter -= Time.deltaTime;
+            }
+            else
+            {
+                isJumping = false;
+            }
+        }
+    }
+
+    void setJumpVariables()
+    {
+        float timeToApex = maxJumpTime / 2;
+        initialJumpVelocity = (2 * maxJumpHeight) / timeToApex;
+    }
+
+    void OnJump(InputAction.CallbackContext context)
+    {
+        isJumpPressed = context.ReadValueAsButton();
     }
 
     public bool GroundedCheck()

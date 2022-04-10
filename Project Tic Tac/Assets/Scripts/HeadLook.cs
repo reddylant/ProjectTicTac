@@ -12,6 +12,7 @@ public class HeadLook : MonoBehaviour
 
     bool walkingPressed;
     bool isGrounded;
+    Vector2 move;
 
     public bool cursorLocked = true;
     public float maxVertical = 90f;
@@ -38,7 +39,8 @@ public class HeadLook : MonoBehaviour
         }
 
         // Subscribe events for character
-        input.CharacterControls.Movement.performed += ctx => walkingPressed = ctx.ReadValueAsButton();
+        input.CharacterControls.Movement.performed += Movement;
+
     }
 
     private void Update()
@@ -71,6 +73,12 @@ public class HeadLook : MonoBehaviour
         {
             playerBody.Rotate(Vector3.up * mouseX);
         }
+    }
+
+    void Movement(InputAction.CallbackContext context)
+    {
+        move = context.ReadValue<Vector2>();
+        Debug.Log(move);
     }
 
     private void OnEnable()
