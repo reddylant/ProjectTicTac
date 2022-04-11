@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
 
     // IDs for the action bools
     int isJumpingHash;
+    int isRunningHash;
     int isGroundedHash;
     int YVelocityHash;
     int XVelocityHash;
@@ -64,6 +65,7 @@ public class PlayerController : MonoBehaviour
 
         // Get IDs for triggers
         isJumpingHash = Animator.StringToHash("isJumping");
+        isRunningHash = Animator.StringToHash("isRunning");
         isGroundedHash = Animator.StringToHash("isGrounded");
         YVelocityHash = Animator.StringToHash("YVelocity");
         XVelocityHash = Animator.StringToHash("XVelocity");
@@ -105,10 +107,15 @@ public class PlayerController : MonoBehaviour
             animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
         }
 
-        if(move.y >= 0.8 && sprint == 1)
+        if (move.y >= 0.8 && sprint == 1)
         {
             animator.SetFloat(ZVelocityHash, 2);
-            Debug.Log("Sprinting");
+            animator.SetBool(isRunningHash, true);
+        }
+
+        if (animator.GetFloat(ZVelocityHash) < 2)
+        {
+            animator.SetBool(isRunningHash, false);
         }
         JumpCheck();
     }
