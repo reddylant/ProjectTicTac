@@ -110,13 +110,8 @@ public class PlayerController : MonoBehaviour
         if (move.y >= 0.8 && sprint == 1)
         {
             animator.SetFloat(ZVelocityHash, 2);
-            animator.SetBool(isRunningHash, true);
         }
 
-        if (animator.GetFloat(ZVelocityHash) < 2)
-        {
-            animator.SetBool(isRunningHash, false);
-        }
         JumpCheck();
     }
 
