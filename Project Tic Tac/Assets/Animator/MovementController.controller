@@ -1436,9 +1436,9 @@ AnimatorStateTransition:
   - m_ConditionMode: 1
     m_ConditionEvent: isCrouching
     m_EventTreshold: 0
-  - m_ConditionMode: 1
-    m_ConditionEvent: isRunning
-    m_EventTreshold: 0
+  - m_ConditionMode: 3
+    m_ConditionEvent: ZVelocity
+    m_EventTreshold: 1.6
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 1547104868028739664}
   m_Solo: 0

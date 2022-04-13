@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
 
     // IDs for the action bools
     int isJumpingHash;
-    int isRunningHash;
+    int isCrouchingHash;
     int isGroundedHash;
     int YVelocityHash;
     int XVelocityHash;
@@ -34,6 +34,7 @@ public class PlayerController : MonoBehaviour
     bool grounded;
     Vector2 move;
     float sprint;
+    float crouch;
 
     // Jump Variables
     bool isJumpPressed;
@@ -65,7 +66,7 @@ public class PlayerController : MonoBehaviour
 
         // Get IDs for triggers
         isJumpingHash = Animator.StringToHash("isJumping");
-        isRunningHash = Animator.StringToHash("isRunning");
+        isCrouchingHash = Animator.StringToHash("isCrouching");
         isGroundedHash = Animator.StringToHash("isGrounded");
         YVelocityHash = Animator.StringToHash("YVelocity");
         XVelocityHash = Animator.StringToHash("XVelocity");
@@ -88,7 +89,8 @@ public class PlayerController : MonoBehaviour
     {
         move = input.CharacterControls.Movement.ReadValue<Vector2>();
         sprint = input.CharacterControls.Sprint.ReadValue<float>();
-
+        crouch = input.CharacterControls.Crouch.ReadValue<float>();
+        
         grounded = GroundedCheck();
 
         if (grounded)
@@ -111,6 +113,11 @@ public class PlayerController : MonoBehaviour
         {
             animator.SetFloat(ZVelocityHash, 2);
         }
+
+        if (crouch == 1)
+            animator.SetBool(isCrouchingHash, true);
+        else
+            animator.SetBool(isCrouchingHash, false);
 
         JumpCheck();
     }

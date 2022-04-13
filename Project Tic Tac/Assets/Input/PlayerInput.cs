@@ -62,6 +62,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Crouch"",
+                    ""type"": ""Button"",
+                    ""id"": ""00d58ba7-f9f5-40ad-94e5-2e0ce5171392"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -196,6 +205,28 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""action"": ""Movement"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""28678d9c-6f8f-4c97-ace5-6c47288d00ea"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
+                    ""interactions"": ""Press(behavior=2)"",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Crouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""105b8327-06ed-4e45-b6d9-2351dade49f6"",
+                    ""path"": ""<Gamepad>/rightStickPress"",
+                    ""interactions"": ""Press(behavior=2)"",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Crouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -208,6 +239,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_CharacterControls_Jump = m_CharacterControls.FindAction("Jump", throwIfNotFound: true);
         m_CharacterControls_Sprint = m_CharacterControls.FindAction("Sprint", throwIfNotFound: true);
         m_CharacterControls_HeadLook = m_CharacterControls.FindAction("HeadLook", throwIfNotFound: true);
+        m_CharacterControls_Crouch = m_CharacterControls.FindAction("Crouch", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -271,6 +303,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     private readonly InputAction m_CharacterControls_Jump;
     private readonly InputAction m_CharacterControls_Sprint;
     private readonly InputAction m_CharacterControls_HeadLook;
+    private readonly InputAction m_CharacterControls_Crouch;
     public struct CharacterControlsActions
     {
         private @PlayerInput m_Wrapper;
@@ -279,6 +312,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_CharacterControls_Jump;
         public InputAction @Sprint => m_Wrapper.m_CharacterControls_Sprint;
         public InputAction @HeadLook => m_Wrapper.m_CharacterControls_HeadLook;
+        public InputAction @Crouch => m_Wrapper.m_CharacterControls_Crouch;
         public InputActionMap Get() { return m_Wrapper.m_CharacterControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -300,6 +334,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @HeadLook.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnHeadLook;
                 @HeadLook.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnHeadLook;
                 @HeadLook.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnHeadLook;
+                @Crouch.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCrouch;
+                @Crouch.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCrouch;
+                @Crouch.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCrouch;
             }
             m_Wrapper.m_CharacterControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -316,6 +353,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @HeadLook.started += instance.OnHeadLook;
                 @HeadLook.performed += instance.OnHeadLook;
                 @HeadLook.canceled += instance.OnHeadLook;
+                @Crouch.started += instance.OnCrouch;
+                @Crouch.performed += instance.OnCrouch;
+                @Crouch.canceled += instance.OnCrouch;
             }
         }
     }
@@ -326,5 +366,6 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnHeadLook(InputAction.CallbackContext context);
+        void OnCrouch(InputAction.CallbackContext context);
     }
 }
