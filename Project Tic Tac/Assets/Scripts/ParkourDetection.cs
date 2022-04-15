@@ -133,10 +133,10 @@ public class ParkourDetection : MonoBehaviour
             //Debug.Log("No Ledge Hit");
         }
 
-        if (result)
-        {
-            Debug.Log("X: " + hitHor.point.x + "Y: " + hitVert.point.y + "Z: " + hitHor.point.z);
-        }
+        //if (result)
+        //{
+        //    Debug.Log("X: " + hitHor.point.x + "Y: " + hitVert.point.y + "Z: " + hitHor.point.z);
+        //}
 
         return result;
     }

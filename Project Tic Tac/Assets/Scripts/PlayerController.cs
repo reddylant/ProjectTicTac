@@ -64,6 +64,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     float moveSpeed;
 
+    // Checks if player is moving while on ledge
+    bool isMoving;
+
     private void Awake()
     {
         input = new PlayerInput();
@@ -122,6 +125,16 @@ public class PlayerController : MonoBehaviour
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
             animator.SetBool(isBracedHash, true);
+
+            // Moves player to targetLocation
+            if (isMoving && transform.position != targetLocation)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
+            }
+            else
+            {
+                isMoving = false;
+            }
         }
         // Else if the player is not attached to a ledge
         else
@@ -184,14 +197,13 @@ public class PlayerController : MonoBehaviour
 
         if(isJumpPressed && isJumping && jumpHeld)
         {
-            if (PD.FindLedge() && moveState != MoveState.Ledge)
+            if(moveState != MoveState.Ledge && PD.FindLedge())
             {
                 moveState = MoveState.Ledge;
                 rigidbody.isKinematic = false;
                 UpdateTarget();
-
-                transform.position = targetLocation;
-                //transform.position += transform.forward * .05f;
+                isMoving = true;
+                //transform.position = targetLocation;
             }
             else if(jumpTimeCounter > 0)
             {
@@ -257,5 +269,8 @@ public class PlayerController : MonoBehaviour
         targetLocation = PD.hitHor.point;
         targetLocation.y = PD.hitVert.point.y;
         targetLocation.y -= hands.localPosition.y;
+        targetLocation += -(hands.forward * hands.localPosition.z);
+
+        Debug.Log("TargetLocation: " + targetLocation);
     }
 }
