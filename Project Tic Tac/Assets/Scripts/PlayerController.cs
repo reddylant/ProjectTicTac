@@ -3,6 +3,13 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    public enum MoveState
+    {
+        Ground,
+        Air,
+        Ledge
+    }
+
     //Serialized Fields
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private float groundedDist = 0.01f;
@@ -24,6 +31,8 @@ public class PlayerController : MonoBehaviour
     int isJumpingHash;
     int isCrouchingHash;
     int isGroundedHash;
+    int isHangingHash;
+    int isBracedHash;
     int YVelocityHash;
     int XVelocityHash;
     int ZVelocityHash;
@@ -42,6 +51,18 @@ public class PlayerController : MonoBehaviour
     bool isJumping;
     float initialJumpVelocity;
     float jumpTimeCounter;
+
+    // Parkour variables
+    ParkourDetection PD;
+    Vector3 targetLocation;
+    [SerializeField]
+    MoveState moveState;
+    [SerializeField]
+    Transform hands;
+    
+    // Speed the player will move from starting position to next position
+    [SerializeField]
+    float moveSpeed;
 
     private void Awake()
     {
@@ -71,7 +92,12 @@ public class PlayerController : MonoBehaviour
         YVelocityHash = Animator.StringToHash("YVelocity");
         XVelocityHash = Animator.StringToHash("XVelocity");
         ZVelocityHash = Animator.StringToHash("ZVelocity");
+        isBracedHash = Animator.StringToHash("isBraced");
+        isHangingHash = Animator.StringToHash("isHanging");
 
+        // Set parkour variables
+        PD = GetComponent<ParkourDetection>();
+        hands = GameObject.FindGameObjectWithTag("Player").transform.Find("Hands");
     }
 
     // Update is called once per frame
@@ -90,34 +116,47 @@ public class PlayerController : MonoBehaviour
         move = input.CharacterControls.Movement.ReadValue<Vector2>();
         sprint = input.CharacterControls.Sprint.ReadValue<float>();
         crouch = input.CharacterControls.Crouch.ReadValue<float>();
-        
-        grounded = GroundedCheck();
-
-        if (grounded)
+        // If player is attached to a ledge
+        if (moveState == MoveState.Ledge)
         {
-            animator.SetFloat(ZVelocityHash, move.y);
-            animator.SetFloat(XVelocityHash, move.x);
-            animator.SetBool(isJumpingHash, false);
-            animator.SetBool(isGroundedHash, true);
-            animator.applyRootMotion = true;
-        }
-        else
-        {
-            animator.SetBool(isGroundedHash, false);
+            rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
-            animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
-            animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
+            animator.SetBool(isBracedHash, true);
         }
-
-        if (move.y >= 0.8 && sprint == 1)
-        {
-            animator.SetFloat(ZVelocityHash, 2);
-        }
-
-        if (crouch == 1)
-            animator.SetBool(isCrouchingHash, true);
+        // Else if the player is not attached to a ledge
         else
-            animator.SetBool(isCrouchingHash, false);
+        {
+            rigidbody.isKinematic = false;
+            animator.applyRootMotion = true;
+            animator.SetBool(isBracedHash, false);
+            grounded = GroundedCheck();
+
+            if (grounded)
+            {
+                animator.SetFloat(ZVelocityHash, move.y);
+                animator.SetFloat(XVelocityHash, move.x);
+                animator.SetBool(isJumpingHash, false);
+                animator.SetBool(isGroundedHash, true);
+                animator.applyRootMotion = true;
+            }
+            else
+            {
+                animator.SetBool(isGroundedHash, false);
+                animator.applyRootMotion = false;
+                animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
+                animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
+            }
+
+            if (move.y >= 0.8 && sprint == 1)
+            {
+                animator.SetFloat(ZVelocityHash, 2);
+            }
+
+            if (crouch == 1)
+                animator.SetBool(isCrouchingHash, true);
+            else
+                animator.SetBool(isCrouchingHash, false);
+        }
 
         JumpCheck();
     }
@@ -145,7 +184,16 @@ public class PlayerController : MonoBehaviour
 
         if(isJumpPressed && isJumping && jumpHeld)
         {
-            if(jumpTimeCounter > 0)
+            if (PD.FindLedge() && moveState != MoveState.Ledge)
+            {
+                moveState = MoveState.Ledge;
+                rigidbody.isKinematic = false;
+                UpdateTarget();
+
+                transform.position = targetLocation;
+                //transform.position += transform.forward * .05f;
+            }
+            else if(jumpTimeCounter > 0)
             {
                 rigidbody.AddForce(new Vector3(0, initialJumpVelocity, 0), ForceMode.VelocityChange);
                 jumpTimeCounter -= Time.deltaTime;
@@ -202,5 +250,12 @@ public class PlayerController : MonoBehaviour
     private void OnDisable()
     {
         input.CharacterControls.Disable();
+    }
+
+    void UpdateTarget()
+    {
+        targetLocation = PD.hitHor.point;
+        targetLocation.y = PD.hitVert.point.y;
+        targetLocation.y -= hands.localPosition.y;
     }
 }

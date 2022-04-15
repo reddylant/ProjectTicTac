@@ -77,8 +77,6 @@ public class ParkourDetection : MonoBehaviour
         float mDHorizontal = 1;
         float mDVertical = 1;
 
-        RaycastHit hitVert;
-        RaycastHit hitHor;
         //Detects surface facing player
         Vector3 originHorizontal = this.transform.position;
         originHorizontal.y += 1f;
@@ -93,37 +91,37 @@ public class ParkourDetection : MonoBehaviour
 
         Debug.DrawRay(originHorizontal + transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
         Debug.DrawRay(originShortVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-        if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitVert, mDHorizontal) &&
-            Physics.Raycast(originShortVertical + transform.right * minDistance / 2, directionVertical, out hitHor, mDVertical))
+        if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
+            Physics.Raycast(originShortVertical + transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
         {
-            Debug.Log("Ledge Hit");
+            //Debug.Log("Ledge Hit");
             result = true;
         }
-        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitVert, mDHorizontal) &&
-            Physics.Raycast(originShortVertical - transform.right * minDistance / 2, directionVertical, out hitHor, mDVertical))
+        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
+            Physics.Raycast(originShortVertical - transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
         {
             Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
             Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.Log("Ledge Hit");
+            //Debug.Log("Ledge Hit");
             result = true;
         }
-        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitVert, mDHorizontal) &&
-            Physics.Raycast(originLongVertical - transform.right * minDistance / 2, directionVertical, out hitHor, mDVertical))
+        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
+            Physics.Raycast(originLongVertical - transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
         {
             Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
             Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
             Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.Log("Ledge Hit");
+            //Debug.Log("Ledge Hit");
             result = true;
         }
-        else if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitVert, mDHorizontal) &&
-            Physics.Raycast(originLongVertical + transform.right * minDistance / 2, directionVertical, out hitHor, mDVertical))
+        else if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
+            Physics.Raycast(originLongVertical + transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
         {
             Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
             Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
             Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
             Debug.DrawRay(originLongVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.Log("Ledge Hit");
+            //Debug.Log("Ledge Hit");
             result = true;
         }
         else
@@ -132,7 +130,12 @@ public class ParkourDetection : MonoBehaviour
             Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
             Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
             Debug.DrawRay(originLongVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.Log("No Ledge Hit");
+            //Debug.Log("No Ledge Hit");
+        }
+
+        if (result)
+        {
+            Debug.Log("X: " + hitHor.point.x + "Y: " + hitVert.point.y + "Z: " + hitHor.point.z);
         }
 
         return result;
