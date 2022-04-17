@@ -210,7 +210,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""28678d9c-6f8f-4c97-ace5-6c47288d00ea"",
                     ""path"": ""<Keyboard>/leftCtrl"",
-                    ""interactions"": ""Press(behavior=2)"",
+                    ""interactions"": ""Press"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Crouch"",
