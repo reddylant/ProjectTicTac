@@ -56,6 +56,7 @@ public class PlayerController : MonoBehaviour
     // Parkour variables
     ParkourDetection PD;
     Vector3 targetLocation;
+    Quaternion targetRotation;
     [SerializeField]
     MoveState moveState;
     [SerializeField]
@@ -64,6 +65,8 @@ public class PlayerController : MonoBehaviour
     // Speed the player will move from starting position to next position
     [SerializeField]
     float moveSpeed;
+    [SerializeField]
+    float rotateSpeed;
 
     // Checks if player is moving while on ledge
     bool isMoving;
@@ -123,9 +126,13 @@ public class PlayerController : MonoBehaviour
         crouch = input.CharacterControls.Crouch.ReadValue<float>();
 
         // Moves player to targetLocation
-        if (isMoving && transform.position != targetLocation)
+        if (isMoving && transform.position != targetLocation )
         {
             transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
+        }
+        else if (isMoving && transform.rotation != targetRotation)
+        {
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
         }
         else
         {
@@ -137,18 +144,22 @@ public class PlayerController : MonoBehaviour
         {
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
-            animator.SetFloat(ZVelocityHash, move.y);
-            animator.SetFloat(XVelocityHash, move.x);
             animator.SetBool(isBracedHash, true);
 
+            if (!isMoving)
+            {
+                animator.SetFloat(ZVelocityHash, move.y);
+                animator.SetFloat(XVelocityHash, move.x);
+            }
             
-            if(animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Idle"))
+            if(!isMoving)
             {
                 if (move.y >= .8f)
                 {
                     if (PD.LedgeUp())
                     {
-
+                        isMoving = true;
+                        UpdateTarget();
                     }
                     else if (PD.Mantle())
                     {
@@ -161,6 +172,60 @@ public class PlayerController : MonoBehaviour
                         targetLocation = PD.hitVert.point;
                         isMoving = true;
                         Debug.Log(targetLocation);
+                    }
+                }
+                if (move.x >= .8f)
+                {
+                    if (PD.WallCheckRight())
+                    {
+                        if (PD.LedgeCornerRight())
+                        {
+                            isMoving = true;
+                            UpdateTarget();
+                        }
+                    }
+                    else
+                    {
+                        if (PD.LedgeRight())
+                        {
+                            isMoving = true;
+                            UpdateTarget();
+                        }
+                        else
+                        {
+                            if (PD.LedgeCornerRight())
+                            {
+                                isMoving = true;
+                                UpdateTarget();
+                            }
+                        }
+                    }
+                }
+                if (move.x <= -.8f)
+                {
+                    if (PD.WallCheckLeft())
+                    {
+                        if (PD.LedgeCornerLeft())
+                        {
+                            isMoving = true;
+                            UpdateTarget();
+                        }
+                    }
+                    else
+                    {
+                        if (PD.LedgeLeft())
+                        {
+                            isMoving = true;
+                            UpdateTarget();
+                        }
+                        else
+                        {
+                            if (PD.LedgeCornerLeft())
+                            {
+                                isMoving = true;
+                                UpdateTarget();
+                            }
+                        }
                     }
                 }
             }
@@ -176,6 +241,7 @@ public class PlayerController : MonoBehaviour
             {
                 rigidbody.isKinematic = false;
                 animator.SetBool(isMantlingHash, false);
+                isMoving = false;
                 
                 if (grounded)
                 {
@@ -311,5 +377,7 @@ public class PlayerController : MonoBehaviour
         targetLocation.y = PD.hitVert.point.y;
         targetLocation.y -= hands.localPosition.y;
         targetLocation += -(hands.forward * hands.localPosition.z);
+
+        targetRotation = Quaternion.LookRotation(-PD.hitHor.normal);
     }
 }

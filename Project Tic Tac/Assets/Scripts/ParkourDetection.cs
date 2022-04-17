@@ -11,6 +11,8 @@ public class ParkourDetection : MonoBehaviour
 
     [SerializeField]
     Transform hands;
+    [SerializeField]
+    LayerMask layers;
 
     private void Start()
     {
@@ -73,72 +75,108 @@ public class ParkourDetection : MonoBehaviour
     //Detects grabbable ledge
     public bool FindLedge()
     {
-        bool result = false;
-        float mDHorizontal = 1;
-        float mDVertical = 1;
+        float distance = 1;
 
         //Detects surface facing player
         Vector3 originHorizontal = this.transform.position;
         originHorizontal.y += 1f;
         Vector3 directionHorizontal = this.transform.forward;
         //Detects if the surface has a grabbable spot almost directly above the players head
-        Vector3 originShortVertical = transform.position + (transform.forward * .3f);
-        originShortVertical.y += 2f;
+        Vector3 originShort = hands.position + (transform.forward * .3f);
+        originShort.y += 1f;
         Vector3 directionVertical = -this.transform.up;
         //Detects if the surface is a little further away in the horizontal direction
-        Vector3 originLongVertical = transform.position + (transform.forward * .5f);
-        originLongVertical.y += 2f;
+        Vector3 originLong = hands.position + (transform.forward * .5f);
+        originLong.y += 1f;
 
-        Debug.DrawRay(originHorizontal + transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
-        Debug.DrawRay(originShortVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-        if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
-            Physics.Raycast(originShortVertical + transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
+        Debug.DrawRay(originShort + transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+        if (Physics.Raycast(originShort + transform.right * minDistance / 2, directionVertical, out hitVert, distance, layers))
         {
-            //Debug.Log("Ledge Hit");
-            result = true;
+            originShort = hands.position - (transform.forward * .05f);
+            originShort.y = hitVert.point.y;
+            originShort.y -= .01f;
+            
+            Debug.DrawRay(originShort + transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            if (Physics.Raycast(originShort + transform.right * minDistance / 2, directionHorizontal, out hitHor, distance, layers))
+            {
+                //Debug.Log("Ledge Hit");
+                return true;
+            }
+            else
+            {
+                originShort = hands.position + (transform.forward * .3f);
+                originShort.y += 1f;
+            }
         }
-        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
-            Physics.Raycast(originShortVertical - transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
+
+        if(Physics.Raycast(originShort - transform.right * minDistance / 2, directionVertical, out hitVert, distance, layers))
         {
-            Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
-            Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            //Debug.Log("Ledge Hit");
-            result = true;
+            originShort = hands.position - (transform.forward * .05f);
+            originShort.y = hitVert.point.y;
+            originShort.y -= .01f;
+
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originShort + transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            if (Physics.Raycast(originShort - transform.right * minDistance / 2, directionHorizontal, out hitHor, distance, layers))
+            {
+                //Debug.Log("Ledge Hit");
+                return true;
+            }
+            else
+            {
+                originShort = hands.position + (transform.forward * .3f);
+                originShort.y += 1f;
+            }
         }
-        else if (Physics.Raycast(originHorizontal - transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
-            Physics.Raycast(originLongVertical - transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
+
+        if(Physics.Raycast(originLong - transform.right * minDistance / 2, directionVertical, out hitVert, distance, layers))
         {
-            Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
-            Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            //Debug.Log("Ledge Hit");
-            result = true;
+            originLong = hands.position - (transform.forward * .05f);
+            originLong.y = hitVert.point.y;
+            originLong.y -= .01f;
+
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originShort + transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            Debug.DrawRay(originLong - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            if (Physics.Raycast(originLong - transform.right * minDistance / 2, directionHorizontal, out hitHor, distance, layers))
+            {
+                //Debug.Log("Ledge Hit");
+                return true;
+            }
+            else
+            {
+                originLong = hands.position + (transform.forward * .5f);
+                originLong.y += 1f;
+            }
         }
-        else if (Physics.Raycast(originHorizontal + transform.right * minDistance / 2, directionHorizontal, out hitHor, mDHorizontal) &&
-            Physics.Raycast(originLongVertical + transform.right * minDistance / 2, directionVertical, out hitVert, mDVertical))
+
+        if(Physics.Raycast(originLong + transform.right * minDistance / 2, directionVertical, out hitVert, distance, layers))
         {
-            Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
-            Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.DrawRay(originLongVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            //Debug.Log("Ledge Hit");
-            result = true;
+            originLong = hands.position - (transform.forward * .05f);
+            originLong.y = hitVert.point.y;
+            originLong.y -= .01f;
+
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originShort + transform.right * minDistance / 2, directionHorizontal * distance, Color.red);
+            Debug.DrawRay(originLong - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originLong + transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            if (Physics.Raycast(originLong - transform.right * minDistance / 2, directionHorizontal, out hitHor, distance, layers))
+            {
+                //Debug.Log("Ledge Hit");
+                return true;
+            }
         }
         else
         {
-            Debug.DrawRay(originHorizontal - transform.right * minDistance / 2, directionHorizontal * mDHorizontal, Color.red);
-            Debug.DrawRay(originShortVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.DrawRay(originLongVertical - transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
-            Debug.DrawRay(originLongVertical + transform.right * minDistance / 2, directionVertical * mDVertical, Color.blue);
+            Debug.DrawRay(originShort - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originLong - transform.right * minDistance / 2, directionVertical * distance, Color.blue);
+            Debug.DrawRay(originLong + transform.right * minDistance / 2, directionVertical * distance, Color.blue);
             //Debug.Log("No Ledge Hit");
         }
-
-        //if (result)
-        //{
-        //    Debug.Log("X: " + hitHor.point.x + "Y: " + hitVert.point.y + "Z: " + hitHor.point.z);
-        //}
-
-        return result;
+        return false;
     }
 
     // Checks if can mantle ledge
@@ -151,12 +189,12 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin + transform.right * minDistance / 2, direction * mantleDistance, Color.blue);
-        if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, mantleDistance))
+        if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, mantleDistance, layers))
         {
             Debug.Log("Mantle Hit");
             return true;
         }
-        else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, mantleDistance))
+        else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, mantleDistance, layers))
         {
             Debug.DrawRay(origin - transform.right * minDistance / 2, direction * mantleDistance, Color.blue);
             Debug.Log("Mantle Hit");
@@ -178,27 +216,27 @@ public class ParkourDetection : MonoBehaviour
         Vector3 origin = hands.position;
         Vector3 direction = -transform.right;
         Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
-        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.Log("Wall Detected");
 
@@ -221,27 +259,27 @@ public class ParkourDetection : MonoBehaviour
         Vector3 origin = hands.position;
         Vector3 direction = transform.right;
         Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
-        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        if (Physics.Raycast(origin - (hands.forward * .2f) - (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .3f) - (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .2f) + (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.DrawRay(origin - (hands.forward * .2f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.Log("Wall Detected");
 
             return true;
         }
-        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, 3))
+        else if (Physics.Raycast(origin - (hands.forward * .3f) + (hands.up * .05f), direction, out hitHor, wallDistance, layers))
         {
             Debug.Log("Wall Detected");
 
@@ -268,20 +306,20 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin + transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
-        if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+        if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, ledgeDistance, layers))
         {
             origin = hands.position - (transform.forward * .05f);
             origin.y = hitVert.point.y;
             origin.y -= .01f;
             direction = transform.forward;
             Debug.DrawRay(origin + transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitHor, ledgeDistance, layers))
             {
 
                 Debug.Log("Ledge Up Hit");
                 return true;
             }
-            else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+            else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance, layers))
             {
                 Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
                 origin = hands.position - (transform.forward * .05f);
@@ -289,7 +327,7 @@ public class ParkourDetection : MonoBehaviour
                 origin.y -= .01f;
                 direction = transform.forward;
                 Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
-                if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+                if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance, layers))
                 {
 
                     Debug.Log("Ledge Up Hit");
@@ -302,7 +340,7 @@ public class ParkourDetection : MonoBehaviour
             }
 
         }
-        else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.blue);
             origin = hands.position - (transform.forward * .05f);
@@ -310,7 +348,7 @@ public class ParkourDetection : MonoBehaviour
             origin.y -= .01f;
             direction = transform.forward;
             Debug.DrawRay(origin - transform.right * minDistance / 2, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitHor, ledgeDistance, layers))
             {
 
                 Debug.Log("Ledge Up Hit");
@@ -341,7 +379,7 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin - (transform.right * .5f), direction * ledgeDistance, Color.blue);
-        if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitVert, ledgeDistance))
+        if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitVert, ledgeDistance, layers))
         {
             // Shoots horizontal Ray to get X and Z coordinates
             origin = hands.position - (transform.forward * .05f);
@@ -350,13 +388,13 @@ public class ParkourDetection : MonoBehaviour
             direction = transform.forward;
 
             Debug.DrawRay(origin - (transform.right * .5f), direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin - (transform.right * .5f), direction, out hitHor, ledgeDistance, layers))
             {
 
                 Debug.Log("Ledge Left Hit");
                 return true;
             }
-            else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance))
+            else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance, layers))
             {
                 Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.blue);
                 origin = hands.position - (transform.forward * .05f);
@@ -364,7 +402,7 @@ public class ParkourDetection : MonoBehaviour
                 origin.y -= .01f;
                 direction = transform.forward;
                 Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.red);
-                if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance))
+                if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance, layers))
                 {
                     Debug.Log("Ledge Left Hit");
                     return true;
@@ -383,7 +421,7 @@ public class ParkourDetection : MonoBehaviour
             }
 
         }
-        else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.blue);
             origin = hands.position - (transform.forward * .05f);
@@ -391,7 +429,7 @@ public class ParkourDetection : MonoBehaviour
             origin.y -= .01f;
             direction = transform.forward;
             Debug.DrawRay(origin - (transform.right * .2f), direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin - (transform.right * .2f), direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Ledge Left Hit");
                 return true;
@@ -422,7 +460,7 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin + (transform.right * .5f), direction * ledgeDistance, Color.blue);
-        if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitVert, ledgeDistance))
+        if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitVert, ledgeDistance, layers))
         {
             // Shoots horizontal Ray to get X and Z coordinates
             origin = hands.position - (transform.forward * .05f);
@@ -431,13 +469,13 @@ public class ParkourDetection : MonoBehaviour
             
             direction = transform.forward;
             Debug.DrawRay(origin + (transform.right * .5f), direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin + (transform.right * .5f), direction, out hitHor, ledgeDistance, layers))
             {
 
                 Debug.Log("Ledge Left Hit");
                 return true;
             }
-            else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance))
+            else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance, layers))
             {
                 Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.blue);
                 origin = hands.position - (transform.forward * .05f);
@@ -445,7 +483,7 @@ public class ParkourDetection : MonoBehaviour
                 origin.y -= .01f;
                 direction = transform.forward;
                 Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.red);
-                if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance))
+                if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance, layers))
                 {
                     Debug.Log("Ledge Left Hit");
                     return true;
@@ -464,7 +502,7 @@ public class ParkourDetection : MonoBehaviour
             }
 
         }
-        else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.blue);
             origin = hands.position - (transform.forward * .05f);
@@ -472,7 +510,7 @@ public class ParkourDetection : MonoBehaviour
             origin.y -= .01f;
             direction = transform.forward;
             Debug.DrawRay(origin + (transform.right * .2f), direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin + (transform.right * .2f), direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Ledge Left Hit");
                 return true;
@@ -502,21 +540,21 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin - (transform.forward * .2f) + (transform.right * .4f), direction * ledgeDistance, Color.blue);
-        if (Physics.Raycast(origin - (transform.forward * .2f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        if (Physics.Raycast(origin - (transform.forward * .2f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, layers))
         {
             origin = hands.position - (transform.forward * .2f);
             origin.y = hitVert.point.y - .01f;
             direction = transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Corner Found");
 
                 return true;
             }
         }
-        else if (Physics.Raycast(origin - (transform.forward * .3f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        else if (Physics.Raycast(origin - (transform.forward * .3f) + (transform.right * .4f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin - (transform.forward * .3f) + (transform.right * .4f), direction * ledgeDistance, Color.blue);
             origin = hands.position - (transform.forward * .3f);
@@ -531,7 +569,7 @@ public class ParkourDetection : MonoBehaviour
                 return true;
             }
         }
-        else if (Physics.Raycast(origin + (transform.forward * .25f) + (transform.right * .1f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin + (transform.forward * .25f) + (transform.right * .1f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin + (transform.forward * .25f) + (transform.right * .1f), direction * ledgeDistance, Color.blue);
             origin = hands.position + (transform.forward * .25f) + (transform.right * .5f);
@@ -539,14 +577,14 @@ public class ParkourDetection : MonoBehaviour
             direction = -transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Forward Corner Found");
 
                 return true;
             }
         }
-        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
             origin = hands.position + (transform.forward * .25f) + (transform.right * .5f);
@@ -554,7 +592,7 @@ public class ParkourDetection : MonoBehaviour
             direction = -transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Forward Corner Found");
 
@@ -581,21 +619,21 @@ public class ParkourDetection : MonoBehaviour
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin - (transform.forward * .2f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
-        if (Physics.Raycast(origin - (transform.forward * .2f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        if (Physics.Raycast(origin - (transform.forward * .2f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, layers))
         {
             origin = hands.position - (transform.forward * .2f);
             origin.y = hitVert.point.y - .01f;
             direction = -transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Corner Found");
 
                 return true;
             }
         }
-        else if (Physics.Raycast(origin - (transform.forward * .3f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, 3))
+        else if (Physics.Raycast(origin - (transform.forward * .3f) - (transform.right * .4f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
             origin = hands.position - (transform.forward * .3f);
@@ -603,14 +641,14 @@ public class ParkourDetection : MonoBehaviour
             direction = -transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Corner Found");
 
                 return true;
             }
         }
-        else if (Physics.Raycast(origin + (transform.forward * .25f) - (transform.right * .1f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin + (transform.forward * .25f) - (transform.right * .1f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
             Debug.DrawRay(origin + (transform.forward * .25f) - (transform.right * .1f), direction * ledgeDistance, Color.blue);
@@ -619,14 +657,14 @@ public class ParkourDetection : MonoBehaviour
             direction = transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Forward Corner Found");
 
                 return true;
             }
         }
-        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance))
+        else if (Physics.Raycast(origin + (transform.forward * .25f), direction, out hitVert, ledgeDistance, layers))
         {
             Debug.DrawRay(origin + (transform.forward * .25f), direction * ledgeDistance, Color.blue);
             Debug.DrawRay(origin - (transform.forward * .3f) - (transform.right * .4f), direction * ledgeDistance, Color.blue);
@@ -636,7 +674,7 @@ public class ParkourDetection : MonoBehaviour
             direction = transform.right;
 
             Debug.DrawRay(origin, direction * ledgeDistance, Color.red);
-            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, 3))
+            if (Physics.Raycast(origin, direction, out hitHor, ledgeDistance, layers))
             {
                 Debug.Log("Forward Corner Found");
 
