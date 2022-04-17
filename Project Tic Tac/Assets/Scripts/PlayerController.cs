@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour
     int isGroundedHash;
     int isHangingHash;
     int isBracedHash;
+    int isMantlingHash;
     int YVelocityHash;
     int XVelocityHash;
     int ZVelocityHash;
@@ -97,6 +98,7 @@ public class PlayerController : MonoBehaviour
         ZVelocityHash = Animator.StringToHash("ZVelocity");
         isBracedHash = Animator.StringToHash("isBraced");
         isHangingHash = Animator.StringToHash("isHanging");
+        isMantlingHash = Animator.StringToHash("isMantling");
 
         // Set parkour variables
         PD = GetComponent<ParkourDetection>();
@@ -119,45 +121,77 @@ public class PlayerController : MonoBehaviour
         move = input.CharacterControls.Movement.ReadValue<Vector2>();
         sprint = input.CharacterControls.Sprint.ReadValue<float>();
         crouch = input.CharacterControls.Crouch.ReadValue<float>();
+
+        // Moves player to targetLocation
+        if (isMoving && transform.position != targetLocation)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
+        }
+        else
+        {
+            isMoving = false;
+        }
+
         // If player is attached to a ledge
         if (moveState == MoveState.Ledge)
         {
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
+            animator.SetFloat(ZVelocityHash, move.y);
+            animator.SetFloat(XVelocityHash, move.x);
             animator.SetBool(isBracedHash, true);
 
-            // Moves player to targetLocation
-            if (isMoving && transform.position != targetLocation)
+            
+            if(animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Idle"))
             {
-                transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
-            }
-            else
-            {
-                isMoving = false;
+                if (move.y >= .8f)
+                {
+                    if (PD.LedgeUp())
+                    {
+
+                    }
+                    else if (PD.Mantle())
+                    {
+                        Debug.Log("Mantling");
+                        moveState = MoveState.Ground;
+                        animator.applyRootMotion = true;
+                        animator.SetBool(isMantlingHash, true);
+                        animator.SetBool(isBracedHash, false);
+
+                        targetLocation = PD.hitVert.point;
+                        isMoving = true;
+                        Debug.Log(targetLocation);
+                    }
+                }
             }
         }
         // Else if the player is not attached to a ledge
         else
         {
-            rigidbody.isKinematic = false;
             animator.applyRootMotion = true;
             animator.SetBool(isBracedHash, false);
             grounded = GroundedCheck();
-
-            if (grounded)
+            
+            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
             {
-                animator.SetFloat(ZVelocityHash, move.y);
-                animator.SetFloat(XVelocityHash, move.x);
-                animator.SetBool(isJumpingHash, false);
-                animator.SetBool(isGroundedHash, true);
-                animator.applyRootMotion = true;
-            }
-            else
-            {
-                animator.SetBool(isGroundedHash, false);
-                animator.applyRootMotion = false;
-                animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
-                animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
+                rigidbody.isKinematic = false;
+                animator.SetBool(isMantlingHash, false);
+                
+                if (grounded)
+                {
+                    animator.SetFloat(ZVelocityHash, move.y);
+                    animator.SetFloat(XVelocityHash, move.x);
+                    animator.SetBool(isJumpingHash, false);
+                    animator.SetBool(isGroundedHash, true);
+                    animator.applyRootMotion = true;
+                }
+                else
+                {
+                    animator.SetBool(isGroundedHash, false);
+                    animator.applyRootMotion = false;
+                    animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
+                    animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
+                }
             }
 
             if (move.y >= 0.8 && sprint == 1)
@@ -176,45 +210,52 @@ public class PlayerController : MonoBehaviour
 
     void JumpCheck()
     {
-        if(!isJumping && grounded && isJumpPressed)
+        if (moveState == MoveState.Ledge)
         {
-            animator.SetBool(isJumpingHash, true);
-            animator.applyRootMotion = false;
-            isJumping = true;
-            jumpTimeCounter = jumpTime;
-            rigidbody.AddForce(new Vector3(0, firstJump, 0), ForceMode.VelocityChange);
-            jumpHeld = true;
+            // This will handle jumping off ledge
         }
-        else if(!isJumpPressed && isJumping && grounded)
+        else
         {
-            animator.applyRootMotion = true;
-            isJumping = false;
-        }
-        else if (!isJumpPressed && isJumping && !grounded)
-        {
-            jumpHeld = false;
-        }
-
-        if(isJumpPressed && isJumping && jumpHeld)
-        {
-            if(moveState != MoveState.Ledge && PD.FindLedge())
+            if (!isJumping && grounded && isJumpPressed)
             {
-                moveState = MoveState.Ledge;
-                rigidbody.isKinematic = false;
-                UpdateTarget();
-                isMoving = true;
-                //transform.position = targetLocation;
+                animator.SetBool(isJumpingHash, true);
+                animator.applyRootMotion = false;
+                isJumping = true;
+                jumpTimeCounter = jumpTime;
+                rigidbody.AddForce(new Vector3(0, firstJump, 0), ForceMode.VelocityChange);
+                jumpHeld = true;
             }
-            else if(jumpTimeCounter > 0)
+            else if (!isJumpPressed && isJumping && grounded)
             {
-                rigidbody.AddForce(new Vector3(0, initialJumpVelocity, 0), ForceMode.VelocityChange);
-                jumpTimeCounter -= Time.deltaTime;
-            }
-            else
-            {
+                animator.applyRootMotion = true;
                 isJumping = false;
             }
+            else if (!isJumpPressed && isJumping && !grounded)
+            {
+                jumpHeld = false;
+            }
+
+            if (isJumpPressed && isJumping && jumpHeld)
+            {
+                if (PD.FindLedge())
+                {
+                    moveState = MoveState.Ledge;
+                    rigidbody.isKinematic = false;
+                    UpdateTarget();
+                    isMoving = true;
+                }
+                else if (jumpTimeCounter > 0)
+                {
+                    rigidbody.AddForce(new Vector3(0, initialJumpVelocity, 0), ForceMode.VelocityChange);
+                    jumpTimeCounter -= Time.deltaTime;
+                }
+                else
+                {
+                    isJumping = false;
+                }
+            }
         }
+        
     }
 
     void setJumpVariables()
@@ -270,7 +311,5 @@ public class PlayerController : MonoBehaviour
         targetLocation.y = PD.hitVert.point.y;
         targetLocation.y -= hands.localPosition.y;
         targetLocation += -(hands.forward * hands.localPosition.z);
-
-        Debug.Log("TargetLocation: " + targetLocation);
     }
 }
