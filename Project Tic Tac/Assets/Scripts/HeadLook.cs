@@ -70,7 +70,7 @@ public class HeadLook : MonoBehaviour
     void Movement(InputAction.CallbackContext context)
     {
         move = context.ReadValue<Vector2>();
-        Debug.Log(move);
+        //Debug.Log(move);
     }
 
     private void OnEnable()
