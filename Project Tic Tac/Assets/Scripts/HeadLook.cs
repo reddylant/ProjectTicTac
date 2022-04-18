@@ -39,6 +39,7 @@ public class HeadLook : MonoBehaviour
 
         // Subscribe events for character
         input.CharacterControls.Movement.performed += Movement;
+        input.CharacterControls.Movement.canceled += Movement;
 
     }
 
@@ -55,22 +56,15 @@ public class HeadLook : MonoBehaviour
         float mouseY = mouseLook.y * mouseSensitivity * Time.deltaTime;
 
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, (maxVertical * -1), maxVertical);
+        xRotation = Mathf.Clamp(xRotation, -maxVertical, maxVertical);
         yRotation -= mouseX;
-        yRotation = Mathf.Clamp(yRotation, (maxHorizontal * -1), maxHorizontal);
+        yRotation = Mathf.Clamp(yRotation, -maxHorizontal, maxHorizontal);
 
-        playerHead.localRotation = Quaternion.Euler(xRotation, (yRotation * -1), 0);
-
-        if (walkingPressed)
-        {
-            playerBody.Rotate(Vector3.up * mouseX);
-            playerHead.localRotation = Quaternion.Euler(xRotation, 0, 0);
-        }
-
-        if ((Mathf.Abs(yRotation) == maxHorizontal))
-        {
-            playerBody.Rotate(Vector3.up * mouseX);
-        }
+        //if !hanging
+        playerHead.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        playerBody.Rotate(Vector3.up * mouseX);
+        //else
+        //playerHead.localRotation = Quaternion.Euler(xRotation, -yRotation, 0);
     }
 
     void Movement(InputAction.CallbackContext context)
