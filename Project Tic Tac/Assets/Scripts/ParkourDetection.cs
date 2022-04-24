@@ -10,7 +10,9 @@ public class ParkourDetection : MonoBehaviour
     float minDistance = .25f;
 
     [SerializeField]
-    Transform hands;
+    public Transform hands;
+    [SerializeField]
+    Transform feet;
     [SerializeField]
     LayerMask layers;
 
@@ -291,6 +293,31 @@ public class ParkourDetection : MonoBehaviour
             Debug.DrawRay(origin - (hands.forward * .3f) - (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.DrawRay(origin - (hands.forward * .2f) + (hands.up * .05f), direction * wallDistance, Color.cyan);
             Debug.Log("No Wall");
+            return false;
+        }
+    }
+
+    public bool WallCheckFront()
+    {
+        float distance = .5f;
+
+        Vector3 origin = hands.position + (transform.forward * .05f);
+        origin.y += .5f;
+        Vector3 direction = transform.forward;
+
+        Debug.DrawRay(origin + (transform.right * minDistance), direction * distance, Color.red);
+        if(Physics.Raycast(origin + (transform.right * minDistance), direction, distance, layers))
+        {
+            return true;
+        }
+        else if(Physics.Raycast(origin - (transform.right * minDistance), direction, distance, layers))
+        {
+            Debug.DrawRay(origin - (transform.right * minDistance), direction * distance, Color.red);
+            return true;
+        }
+        else
+        {
+            Debug.DrawRay(origin + (transform.right * minDistance), direction * distance, Color.red);
             return false;
         }
     }
@@ -691,5 +718,35 @@ public class ParkourDetection : MonoBehaviour
         }
 
         return false;
+    }
+
+    // This will determine whether the player is hanging or braced on a ledge
+    public bool LedgeTypeCheck()
+    {
+        float distance = .6f;
+
+        // Amount the rays origin is adjusted horizontally
+        Vector3 adjust = (transform.right * .1f);
+
+        Vector3 origin = feet.position - (transform.forward * .2f);
+        Vector3 direction = feet.forward;
+        Debug.DrawRay(origin + adjust, direction * distance, Color.red);
+        if (Physics.Raycast(origin + adjust, direction, distance, layers))
+        {
+            Debug.DrawRay(origin - adjust, direction * distance, Color.red);
+            if (Physics.Raycast(origin - adjust, direction, distance, layers))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            Debug.DrawRay(origin - adjust, direction * distance, Color.red);
+            return false;
+        }
     }
 }

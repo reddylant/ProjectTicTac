@@ -61,6 +61,12 @@ public class PlayerController : MonoBehaviour
     MoveState moveState;
     [SerializeField]
     Transform hands;
+    [SerializeField]
+    bool braced = true;
+
+    // Positions when the player is braced or hanging
+    [SerializeField]
+    Vector3[] handPositions = new Vector3[2];
     
     // Speed the player will move from starting position to next position
     [SerializeField]
@@ -111,6 +117,17 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (braced)
+        {
+            PD.hands.localPosition = handPositions[0];
+            UpdateTarget();
+        }
+        else
+        {
+            PD.hands.localPosition = handPositions[1];
+            UpdateTarget();
+        }
+
         UpdateMovement();
     }
 
@@ -126,17 +143,17 @@ public class PlayerController : MonoBehaviour
         crouch = input.CharacterControls.Crouch.ReadValue<float>();
 
         // Moves player to targetLocation
-        if (isMoving && transform.position != targetLocation )
+        if (isMoving && (transform.position != targetLocation || transform.rotation != targetRotation))
         {
             transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
-        }
-        else if (isMoving && transform.rotation != targetRotation)
-        {
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
         }
         else
         {
-            isMoving = false;
+            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Braced") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Hang"))
+            {
+                isMoving = false;
+            }
         }
 
         // If player is attached to a ledge
@@ -144,7 +161,20 @@ public class PlayerController : MonoBehaviour
         {
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
-            animator.SetBool(isBracedHash, true);
+
+            // Checks if player can brace
+            if (PD.LedgeTypeCheck())
+            {
+                animator.SetBool(isBracedHash, true);
+                animator.SetBool(isHangingHash, false);
+                braced = true;
+            }
+            else
+            {
+                animator.SetBool(isHangingHash, true);
+                animator.SetBool(isBracedHash, false);
+                braced = false;
+            }
 
             if (!isMoving)
             {
@@ -154,24 +184,32 @@ public class PlayerController : MonoBehaviour
             
             if(!isMoving)
             {
+                moveSpeed = 1f;
                 if (move.y >= .8f)
                 {
-                    if (PD.LedgeUp())
+                    if (braced && PD.LedgeUp())
                     {
                         isMoving = true;
                         UpdateTarget();
                     }
-                    else if (PD.Mantle())
+                    else
                     {
-                        Debug.Log("Mantling");
-                        moveState = MoveState.Ground;
-                        animator.applyRootMotion = true;
-                        animator.SetBool(isMantlingHash, true);
-                        animator.SetBool(isBracedHash, false);
-
-                        targetLocation = PD.hitVert.point;
-                        isMoving = true;
-                        Debug.Log(targetLocation);
+                        if (!PD.WallCheckFront())
+                        {
+                            if(PD.Mantle())
+                            {
+                                moveState = MoveState.Ground;
+                                animator.applyRootMotion = true;
+                                rigidbody.isKinematic = true;
+                                animator.SetBool(isMantlingHash, true);
+                                animator.SetBool(isBracedHash, false);
+                                targetLocation = PD.hitVert.point;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Not enough room to mantle");
+                        }
                     }
                 }
                 if (move.x >= .8f)
@@ -233,12 +271,25 @@ public class PlayerController : MonoBehaviour
         // Else if the player is not attached to a ledge
         else
         {
-            animator.applyRootMotion = true;
             animator.SetBool(isBracedHash, false);
+            animator.applyRootMotion = true;
             grounded = GroundedCheck();
-            
-            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
             {
+                //Debug.Log("Mantling");
+                animator.MatchTarget(targetLocation, gameObject.transform.rotation, AvatarTarget.Root, new MatchTargetWeightMask(new Vector3(0, .5f, 1), 1), 0.4f, .8f);
+                rigidbody.isKinematic = true;
+                animator.SetBool(isMantlingHash, false);
+            }
+            else if (animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
+            {
+                animator.MatchTarget(targetLocation, gameObject.transform.rotation, AvatarTarget.Root, new MatchTargetWeightMask(new Vector3(0, .65f, 1), 1), 0.4f, .8f);
+                rigidbody.isKinematic = true;
+                animator.SetBool(isMantlingHash, false);
+            }
+            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle"))
+            {
+                //Debug.Log("No Longer Mantling");
                 rigidbody.isKinematic = false;
                 animator.SetBool(isMantlingHash, false);
                 isMoving = false;
@@ -307,6 +358,7 @@ public class PlayerController : MonoBehaviour
                 {
                     moveState = MoveState.Ledge;
                     rigidbody.isKinematic = false;
+                    moveSpeed = 5f;
                     UpdateTarget();
                     isMoving = true;
                 }
@@ -318,6 +370,17 @@ public class PlayerController : MonoBehaviour
                 else
                 {
                     isJumping = false;
+                }
+            }
+            else if (isJumpPressed)
+            {
+                if (PD.FindLedge())
+                {
+                    moveState = MoveState.Ledge;
+                    rigidbody.isKinematic = false;
+                    moveSpeed = 5f;
+                    UpdateTarget();
+                    isMoving = true;
                 }
             }
         }
