@@ -112,11 +112,16 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         UpdateMovement();
+
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
+        {
+            animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+        }
     }
 
     private void FixedUpdate()
     {
-        animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+       
     }
 
     void UpdateMovement()
@@ -233,7 +238,6 @@ public class PlayerController : MonoBehaviour
         // Else if the player is not attached to a ledge
         else
         {
-            animator.applyRootMotion = true;
             animator.SetBool(isBracedHash, false);
             grounded = GroundedCheck();
             
@@ -258,6 +262,11 @@ public class PlayerController : MonoBehaviour
                     animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
                     animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
                 }
+            }
+
+            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Landing") && grounded)
+            {
+                animator.applyRootMotion = true;
             }
 
             if (move.y >= 0.8 && sprint == 1)
@@ -337,26 +346,32 @@ public class PlayerController : MonoBehaviour
 
     public bool GroundedCheck()
     {
-        Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
-        if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        Vector3 origin;
+        if (moveState == MoveState.Ground)
+            origin = animator.rootPosition + transform.up * (groundedDist / 2);
+        else
+            origin = animator.rootPosition;
+
+        Debug.DrawRay(origin + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
+        if(Physics.Raycast(animator.rootPosition + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
             return true;
         }
-        else if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        else if(Physics.Raycast(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(origin + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
             return true;
         }
-        else if (Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        else if (Physics.Raycast(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
-            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
             return true;
         }
         else
         {
-            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
-            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
             return false;
         }
     }
