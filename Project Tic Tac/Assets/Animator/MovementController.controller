@@ -571,7 +571,7 @@ AnimatorStateMachine:
     m_Position: {x: 860, y: 230, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5557733801239544804}
-    m_Position: {x: 620, y: 60, z: 0}
+    m_Position: {x: 580, y: 180, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1587851512787582975}
     m_Position: {x: 790, y: 380, z: 0}
@@ -2013,7 +2013,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Braced To Crouch
+  m_Name: Braced Mantle
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:

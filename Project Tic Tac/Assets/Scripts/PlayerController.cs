@@ -40,6 +40,7 @@ public class PlayerController : MonoBehaviour
 
     // Reading player input
     PlayerInput input;
+    Vector3 mantleToPosistion;
 
     bool grounded;
     Vector2 move;
@@ -93,7 +94,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         // Initialize animator
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
 
         // Initialize RigidBody
         rigidbody = GetComponent<Rigidbody>();
@@ -111,12 +112,18 @@ public class PlayerController : MonoBehaviour
 
         // Set parkour variables
         PD = GetComponent<ParkourDetection>();
-        hands = GameObject.FindGameObjectWithTag("Player").transform.Find("Hands");
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (targetLocation == null)
+        {
+            targetLocation = Vector3.zero;
+        }
+
+        
+
         if (braced)
         {
             PD.hands.localPosition = handPositions[0];
@@ -127,13 +134,17 @@ public class PlayerController : MonoBehaviour
             PD.hands.localPosition = handPositions[1];
             UpdateTarget();
         }
-
         UpdateMovement();
     }
 
     private void FixedUpdate()
     {
         animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawSphere(mantleToPosistion, .2f);
     }
 
     void UpdateMovement()
@@ -159,6 +170,7 @@ public class PlayerController : MonoBehaviour
         // If player is attached to a ledge
         if (moveState == MoveState.Ledge)
         {
+            //PD.Mantle();
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
 
@@ -203,7 +215,9 @@ public class PlayerController : MonoBehaviour
                                 rigidbody.isKinematic = true;
                                 animator.SetBool(isMantlingHash, true);
                                 animator.SetBool(isBracedHash, false);
+                                animator.SetBool(isHangingHash, false);
                                 targetLocation = PD.hitVert.point;
+                                mantleToPosistion = targetLocation + transform.up * .35f;
                             }
                         }
                         else
@@ -271,25 +285,18 @@ public class PlayerController : MonoBehaviour
         // Else if the player is not attached to a ledge
         else
         {
-            animator.SetBool(isBracedHash, false);
-            animator.applyRootMotion = true;
             grounded = GroundedCheck();
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
+            if ((animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") || animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle")) && !animator.isMatchingTarget)
             {
-                //Debug.Log("Mantling");
-                animator.MatchTarget(targetLocation, gameObject.transform.rotation, AvatarTarget.Root, new MatchTargetWeightMask(new Vector3(0, .5f, 1), 1), 0.4f, .8f);
+                animator.applyRootMotion = true;
                 rigidbody.isKinematic = true;
-                animator.SetBool(isMantlingHash, false);
+                animator.MatchTarget(mantleToPosistion, gameObject.transform.rotation, AvatarTarget.RightFoot, new MatchTargetWeightMask(Vector3.one, 1), .8f, 1f);
+                Debug.Log("Braced Mantle");
             }
-            else if (animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
-            {
-                animator.MatchTarget(targetLocation, gameObject.transform.rotation, AvatarTarget.Root, new MatchTargetWeightMask(new Vector3(0, .65f, 1), 1), 0.4f, .8f);
-                rigidbody.isKinematic = true;
-                animator.SetBool(isMantlingHash, false);
-            }
-            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle"))
+            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle"))
             {
                 //Debug.Log("No Longer Mantling");
+                braced = true;
                 rigidbody.isKinematic = false;
                 animator.SetBool(isMantlingHash, false);
                 isMoving = false;

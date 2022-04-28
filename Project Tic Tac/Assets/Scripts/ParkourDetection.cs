@@ -18,7 +18,7 @@ public class ParkourDetection : MonoBehaviour
 
     private void Start()
     {
-        hands = GameObject.FindGameObjectWithTag("Player").transform.Find("Hands");
+        
     }
 
     //Checks for vaultable surface
@@ -186,26 +186,26 @@ public class ParkourDetection : MonoBehaviour
     {
         float mantleDistance = .5f;
 
-        Vector3 origin = transform.position + (transform.forward * .8f);
-        origin.y += 1.5f;
+        Vector3 origin = hands.position + (transform.forward * .8f);
+        origin.y += .4f;
         Vector3 direction = Vector3.down;
 
         Debug.DrawRay(origin + transform.right * minDistance / 2, direction * mantleDistance, Color.blue);
         if (Physics.Raycast(origin + transform.right * minDistance / 2, direction, out hitVert, mantleDistance, layers))
         {
-            Debug.Log("Mantle Hit");
+            //Debug.Log("Mantle Hit");
             return true;
         }
         else if (Physics.Raycast(origin - transform.right * minDistance / 2, direction, out hitVert, mantleDistance, layers))
         {
             Debug.DrawRay(origin - transform.right * minDistance / 2, direction * mantleDistance, Color.blue);
-            Debug.Log("Mantle Hit");
+            //Debug.Log("Mantle Hit");
             return true;
         }
         else
         {
             Debug.DrawRay(origin - transform.right * minDistance / 2, direction * mantleDistance, Color.blue);
-            Debug.Log("No Mantle Hit");
+            //Debug.Log("No Mantle Hit");
         }
 
         return false;
