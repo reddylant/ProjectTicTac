@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3135275786093224698}
   - component: {fileID: 6728786314047000573}
   - component: {fileID: 4328377087216006861}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ledge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 8739711133863644409}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 24.22, y: 45, z: 261.29}
-  m_LocalScale: {x: 5, y: 0.1, z: 50}
+  m_LocalScale: {x: 1, y: 0.1, z: 50}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0

@@ -40,6 +40,7 @@ public class PlayerController : MonoBehaviour
 
     // Reading player input
     PlayerInput input;
+    Vector3 mantleToPosistion;
 
     bool grounded;
     Vector2 move;
@@ -61,6 +62,12 @@ public class PlayerController : MonoBehaviour
     MoveState moveState;
     [SerializeField]
     Transform hands;
+    [SerializeField]
+    bool braced = true;
+
+    // Positions when the player is braced or hanging
+    [SerializeField]
+    Vector3[] handPositions = new Vector3[2];
     
     // Speed the player will move from starting position to next position
     [SerializeField]
@@ -87,7 +94,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         // Initialize animator
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
 
         // Initialize RigidBody
         rigidbody = GetComponent<Rigidbody>();
@@ -105,23 +112,39 @@ public class PlayerController : MonoBehaviour
 
         // Set parkour variables
         PD = GetComponent<ParkourDetection>();
-        hands = GameObject.FindGameObjectWithTag("Player").transform.Find("Hands");
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateMovement();
-
-        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
+        if (targetLocation == null)
         {
-            animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+            targetLocation = Vector3.zero;
         }
+
+        
+
+        if (braced)
+        {
+            PD.hands.localPosition = handPositions[0];
+            UpdateTarget();
+        }
+        else
+        {
+            PD.hands.localPosition = handPositions[1];
+            UpdateTarget();
+        }
+        UpdateMovement();
     }
 
     private void FixedUpdate()
     {
-       
+        animator.SetFloat(YVelocityHash, rigidbody.velocity.y);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawSphere(mantleToPosistion, .2f);
     }
 
     void UpdateMovement()
@@ -131,25 +154,39 @@ public class PlayerController : MonoBehaviour
         crouch = input.CharacterControls.Crouch.ReadValue<float>();
 
         // Moves player to targetLocation
-        if (isMoving && transform.position != targetLocation )
+        if (isMoving && (transform.position != targetLocation || transform.rotation != targetRotation))
         {
             transform.position = Vector3.MoveTowards(transform.position, targetLocation, moveSpeed * Time.deltaTime);
-        }
-        else if (isMoving && transform.rotation != targetRotation)
-        {
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
         }
         else
         {
-            isMoving = false;
+            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Braced") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Hang"))
+            {
+                isMoving = false;
+            }
         }
 
         // If player is attached to a ledge
         if (moveState == MoveState.Ledge)
         {
+            //PD.Mantle();
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
-            animator.SetBool(isBracedHash, true);
+
+            // Checks if player can brace
+            if (PD.LedgeTypeCheck())
+            {
+                animator.SetBool(isBracedHash, true);
+                animator.SetBool(isHangingHash, false);
+                braced = true;
+            }
+            else
+            {
+                animator.SetBool(isHangingHash, true);
+                animator.SetBool(isBracedHash, false);
+                braced = false;
+            }
 
             if (!isMoving)
             {
@@ -159,24 +196,34 @@ public class PlayerController : MonoBehaviour
             
             if(!isMoving)
             {
+                moveSpeed = 1f;
                 if (move.y >= .8f)
                 {
-                    if (PD.LedgeUp())
+                    if (braced && PD.LedgeUp())
                     {
                         isMoving = true;
                         UpdateTarget();
                     }
-                    else if (PD.Mantle())
+                    else
                     {
-                        Debug.Log("Mantling");
-                        moveState = MoveState.Ground;
-                        animator.applyRootMotion = true;
-                        animator.SetBool(isMantlingHash, true);
-                        animator.SetBool(isBracedHash, false);
-
-                        targetLocation = PD.hitVert.point;
-                        isMoving = true;
-                        Debug.Log(targetLocation);
+                        if (!PD.WallCheckFront())
+                        {
+                            if(PD.Mantle())
+                            {
+                                moveState = MoveState.Ground;
+                                animator.applyRootMotion = true;
+                                rigidbody.isKinematic = true;
+                                animator.SetBool(isMantlingHash, true);
+                                animator.SetBool(isBracedHash, false);
+                                animator.SetBool(isHangingHash, false);
+                                targetLocation = PD.hitVert.point;
+                                mantleToPosistion = targetLocation + transform.up * .35f;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Not enough room to mantle");
+                        }
                     }
                 }
                 if (move.x >= .8f)
@@ -238,11 +285,18 @@ public class PlayerController : MonoBehaviour
         // Else if the player is not attached to a ledge
         else
         {
-            animator.SetBool(isBracedHash, false);
             grounded = GroundedCheck();
-            
-            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced To Crouch"))
+            if ((animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") || animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle")) && !animator.isMatchingTarget)
             {
+                animator.applyRootMotion = true;
+                rigidbody.isKinematic = true;
+                animator.MatchTarget(mantleToPosistion, gameObject.transform.rotation, AvatarTarget.RightFoot, new MatchTargetWeightMask(Vector3.one, 1), .8f, 1f);
+                Debug.Log("Braced Mantle");
+            }
+            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle"))
+            {
+                //Debug.Log("No Longer Mantling");
+                braced = true;
                 rigidbody.isKinematic = false;
                 animator.SetBool(isMantlingHash, false);
                 isMoving = false;
@@ -262,11 +316,6 @@ public class PlayerController : MonoBehaviour
                     animator.SetFloat(ZVelocityHash, rigidbody.velocity.z);
                     animator.SetFloat(XVelocityHash, rigidbody.velocity.x);
                 }
-            }
-
-            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Landing") && grounded)
-            {
-                animator.applyRootMotion = true;
             }
 
             if (move.y >= 0.8 && sprint == 1)
@@ -316,6 +365,7 @@ public class PlayerController : MonoBehaviour
                 {
                     moveState = MoveState.Ledge;
                     rigidbody.isKinematic = false;
+                    moveSpeed = 5f;
                     UpdateTarget();
                     isMoving = true;
                 }
@@ -327,6 +377,17 @@ public class PlayerController : MonoBehaviour
                 else
                 {
                     isJumping = false;
+                }
+            }
+            else if (isJumpPressed)
+            {
+                if (PD.FindLedge())
+                {
+                    moveState = MoveState.Ledge;
+                    rigidbody.isKinematic = false;
+                    moveSpeed = 5f;
+                    UpdateTarget();
+                    isMoving = true;
                 }
             }
         }
@@ -346,32 +407,26 @@ public class PlayerController : MonoBehaviour
 
     public bool GroundedCheck()
     {
-        Vector3 origin;
-        if (moveState == MoveState.Ground)
-            origin = animator.rootPosition + transform.up * (groundedDist / 2);
-        else
-            origin = animator.rootPosition;
-
-        Debug.DrawRay(origin + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
-        if(Physics.Raycast(animator.rootPosition + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down * groundedDist, Color.blue);
+        if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.forward * .1f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
             return true;
         }
-        else if(Physics.Raycast(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        else if(Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            Debug.DrawRay(origin + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .15f), Vector3.down * groundedDist, Color.blue);
             return true;
         }
-        else if (Physics.Raycast(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
+        else if (Physics.Raycast(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down, maxDistance: groundedDist, playerLayer))
         {
-            Debug.DrawRay(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
-            Debug.DrawRay(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
             return true;
         }
         else
         {
-            Debug.DrawRay(origin + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
-            Debug.DrawRay(origin - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) + (transform.right * .1f) - (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
+            Debug.DrawRay(animator.rootPosition + transform.up * (groundedDist / 2) - (transform.right * .15f) + (transform.forward * .07f), Vector3.down * groundedDist, Color.blue);
             return false;
         }
     }
