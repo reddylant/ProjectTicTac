@@ -723,7 +723,7 @@ public class ParkourDetection : MonoBehaviour
     // This will determine whether the player is hanging or braced on a ledge
     public bool LedgeTypeCheck()
     {
-        float distance = .6f;
+        float distance = 1f;
 
         // Amount the rays origin is adjusted horizontally
         Vector3 adjust = (transform.right * .1f);
