@@ -77,6 +77,7 @@ public class PlayerController : MonoBehaviour
 
     // Checks if player is moving while on ledge
     bool isMoving;
+    bool wallJump;
 
     private void Awake()
     {
@@ -166,6 +167,7 @@ public class PlayerController : MonoBehaviour
             //PD.Mantle();
             rigidbody.isKinematic = true;
             animator.applyRootMotion = false;
+            animator.SetBool(isJumpingHash, false);
 
             // Checks if player can brace
             if (PD.LedgeTypeCheck())
@@ -275,6 +277,14 @@ public class PlayerController : MonoBehaviour
                         }
                     }
                 }
+                if (crouch == 1)
+                {
+                    animator.SetBool(isBracedHash, false);
+                    animator.SetBool(isHangingHash, false);
+                    animator.SetBool(isMantlingHash, false);
+                    animator.SetBool(isJumpingHash, false);
+                    moveState = MoveState.Air;
+                }
             }
         }
         // Else if the player is not attached to a ledge
@@ -288,13 +298,23 @@ public class PlayerController : MonoBehaviour
                 animator.MatchTarget(mantleToPosistion, gameObject.transform.rotation, AvatarTarget.RightFoot, new MatchTargetWeightMask(Vector3.one, 1), .8f, 1f);
                 //Debug.Log("MatchTarget: " + animator.isMatchingTarget);
             }
-            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle") && !animator.isMatchingTarget)
+            else if (animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Jump"))
+            {
+                animator.applyRootMotion = true;
+                rigidbody.isKinematic = true;
+                animator.SetBool(isJumpingHash, false);
+                Debug.Log("Ledge Jump");
+            }
+            else if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Mantle") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Hang Mantle") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Jump") && !animator.isMatchingTarget)
             {
                 //Debug.Log("MatchTarget: " + animator.isMatchingTarget);
-                braced = true;
                 rigidbody.isKinematic = false;
                 animator.SetBool(isMantlingHash, false);
+                animator.SetBool(isBracedHash, false);
+                animator.SetBool(isHangingHash, false);
+                braced = true;
                 isMoving = false;
+                wallJump = false;
                 
                 if (grounded)
                 {
@@ -329,11 +349,17 @@ public class PlayerController : MonoBehaviour
 
     void JumpCheck()
     {
-        if (moveState == MoveState.Ledge)
+        if (moveState == MoveState.Ledge && !wallJump)
         {
-            // This will handle jumping off ledge
+            if (isJumpPressed && !animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Braced") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Jump to Hang") && !isMoving)
+            {
+                animator.SetBool(isJumpingHash, true);
+                moveState = MoveState.Air;
+                wallJump = true;
+                Debug.Log("Wall Jump: " + wallJump);
+            }
         }
-        else
+        else if(moveState != MoveState.Ledge && !animator.GetCurrentAnimatorStateInfo(0).IsName("Braced Jump") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Braced") && !wallJump)
         {
             if (!isJumping && grounded && isJumpPressed)
             {
@@ -356,15 +382,7 @@ public class PlayerController : MonoBehaviour
 
             if (isJumpPressed && isJumping && jumpHeld)
             {
-                if (PD.FindLedge())
-                {
-                    moveState = MoveState.Ledge;
-                    rigidbody.isKinematic = false;
-                    moveSpeed = 5f;
-                    UpdateTarget();
-                    isMoving = true;
-                }
-                else if (jumpTimeCounter > 0)
+                if (jumpTimeCounter > 0)
                 {
                     rigidbody.AddForce(new Vector3(0, initialJumpVelocity, 0), ForceMode.VelocityChange);
                     jumpTimeCounter -= Time.deltaTime;
@@ -374,7 +392,8 @@ public class PlayerController : MonoBehaviour
                     isJumping = false;
                 }
             }
-            else if (isJumpPressed)
+
+            if (isJumpPressed && !wallJump)
             {
                 if (PD.FindLedge())
                 {
@@ -383,6 +402,7 @@ public class PlayerController : MonoBehaviour
                     moveSpeed = 5f;
                     UpdateTarget();
                     isMoving = true;
+                    Debug.Log("Wall Jump: " + wallJump);
                 }
             }
         }
